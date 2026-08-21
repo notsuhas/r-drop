@@ -1,0 +1,1 @@
+CREATE INDEX `idx_api_tokens_hash` ON `api_tokens` (`hash`);

@@ -8,8 +8,8 @@ export default function Login() {
           ho<span className="text-honey">·</span>drops
         </div>
         <p className="mt-2 text-sm text-muted">
-          Asset drive for theclau.de. Invite-only — sign in with the Google
-          account that was invited.
+          Asset drive for theclau.de. Invite-only — sign in with the Google account that was
+          invited.
         </p>
         <button
           type="button"
@@ -40,8 +40,7 @@ export default function Login() {
           Continue with Google
         </button>
         <p className="mt-4 text-center text-xs text-muted">
-          Public assets live at{" "}
-          <span className="font-mono">ho-drops.theclau.de</span>
+          Public assets live at <span className="font-mono">ho-drops.theclau.de</span>
         </p>
       </div>
     </div>

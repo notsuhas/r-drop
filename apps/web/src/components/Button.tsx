@@ -7,12 +7,9 @@ interface IButton {
 }
 
 const styles = {
-  primary:
-    "bg-honey text-honey-ink font-semibold hover:brightness-105",
-  ghost:
-    "border border-line bg-panel-2 text-ink hover:border-[rgba(255,255,255,0.18)]",
-  danger:
-    "border border-[rgba(255,110,110,0.35)] text-danger hover:bg-[rgba(255,110,110,0.1)]",
+  primary: "bg-honey text-honey-ink font-semibold hover:brightness-105",
+  ghost: "border border-line bg-panel-2 text-ink hover:border-[rgba(255,255,255,0.18)]",
+  danger: "border border-[rgba(255,110,110,0.35)] text-danger hover:bg-[rgba(255,110,110,0.1)]",
 };
 
 export default function Button(props: IButton) {

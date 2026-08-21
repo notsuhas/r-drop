@@ -1,10 +1,10 @@
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSession, signOut } from "./lib/auth";
+import { useState } from "react";
 import { api } from "./lib/api";
-import Login from "./pages/Login";
+import { signOut, useSession } from "./lib/auth";
 import Files from "./pages/Files";
 import Invites from "./pages/Invites";
+import Login from "./pages/Login";
 import Tokens from "./pages/Tokens";
 
 type Tab = "files" | "invites" | "tokens";
@@ -47,9 +47,7 @@ export default function App() {
                 type="button"
                 onClick={() => setTab(t.id)}
                 className={`rounded-lg px-3 py-2 text-left font-display text-sm transition-colors ${
-                  tab === t.id
-                    ? "bg-panel-2 font-semibold text-ink"
-                    : "text-muted hover:text-ink"
+                  tab === t.id ? "bg-panel-2 font-semibold text-ink" : "text-muted hover:text-ink"
                 }`}
               >
                 {t.label}

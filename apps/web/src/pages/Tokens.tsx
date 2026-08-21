@@ -1,8 +1,8 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "../lib/api";
 import Button from "../components/Button";
 import Empty from "../components/Empty";
+import { api } from "../lib/api";
 
 export default function Tokens() {
   const [name, setName] = useState("");
@@ -28,8 +28,7 @@ export default function Tokens() {
       <h1 className="font-display text-lg font-semibold">API tokens</h1>
       <p className="mt-1 text-sm text-muted">
         For agents and scripts. Send as{" "}
-        <span className="font-mono">Authorization: Bearer &lt;token&gt;</span> to
-        POST /api/upload.
+        <span className="font-mono">Authorization: Bearer &lt;token&gt;</span> to POST /api/upload.
       </p>
 
       <form

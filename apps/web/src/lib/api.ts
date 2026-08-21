@@ -43,8 +43,7 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   me: () => req<IMe>("/api/me"),
-  objects: (prefix: string) =>
-    req<IListing>(`/api/objects?prefix=${encodeURIComponent(prefix)}`),
+  objects: (prefix: string) => req<IListing>(`/api/objects?prefix=${encodeURIComponent(prefix)}`),
   upload: (file: File, folder: string) => {
     const form = new FormData();
     form.set("file", file);
@@ -74,8 +73,7 @@ export const api = {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ name, scope }),
     }),
-  deleteToken: (id: string) =>
-    req<{ deleted: string }>(`/api/tokens/${id}`, { method: "DELETE" }),
+  deleteToken: (id: string) => req<{ deleted: string }>(`/api/tokens/${id}`, { method: "DELETE" }),
 };
 
 export const PUBLIC_BASE = "https://ho-drops.theclau.de";

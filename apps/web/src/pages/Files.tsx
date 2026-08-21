@@ -1,13 +1,17 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, PUBLIC_BASE, type IObject } from "../lib/api";
 import Button from "../components/Button";
 import Empty from "../components/Empty";
+import { api, type IObject, PUBLIC_BASE } from "../lib/api";
 
 type CopyFormat = "newline" | "json" | "ts" | "manifest";
 
 const fmtSize = (n: number) =>
-  n < 1024 ? `${n} B` : n < 1048576 ? `${(n / 1024).toFixed(1)} KB` : `${(n / 1048576).toFixed(1)} MB`;
+  n < 1024
+    ? `${n} B`
+    : n < 1048576
+      ? `${(n / 1024).toFixed(1)} KB`
+      : `${(n / 1048576).toFixed(1)} MB`;
 
 const camel = (s: string) =>
   s
@@ -21,8 +25,7 @@ function formatLinks(objects: IObject[], format: CopyFormat, folder: string) {
   if (format === "manifest") return `${PUBLIC_BASE}/_manifest/${folder}.json`;
   if (format === "newline") return objects.map((o) => o.url).join("\n");
   const entries = objects.map((o) => [camel(basename(o.key)), o.url] as const);
-  if (format === "json")
-    return JSON.stringify(Object.fromEntries(entries), null, 2);
+  if (format === "json") return JSON.stringify(Object.fromEntries(entries), null, 2);
   return `export const ASSETS = {\n${entries
     .map(([k, v]) => `  ${k}: "${v}",`)
     .join("\n")}\n} as const;`;
@@ -33,6 +36,11 @@ export default function Files() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [dragging, setDragging] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [newFolderOpen, setNewFolderOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [failures, setFailures] = useState<string[]>([]);
   const fileInput = useRef<HTMLInputElement>(null);
   const qc = useQueryClient();
 
@@ -45,9 +53,23 @@ export default function Files() {
 
   const upload = useMutation({
     mutationFn: async (files: File[]) => {
-      for (const f of files) await api.upload(f, uploadTarget);
+      setFailures([]);
+      setProgress({ done: 0, total: files.length });
+      const failed: string[] = [];
+      for (const f of files) {
+        try {
+          await api.upload(f, uploadTarget);
+        } catch (err) {
+          failed.push(`${f.name}: ${err instanceof Error ? err.message : "failed"}`);
+        }
+        setProgress((p) => (p ? { ...p, done: p.done + 1 } : p));
+      }
+      setFailures(failed);
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: ["objects"] }),
+    onSettled: () => {
+      setProgress(null);
+      qc.invalidateQueries({ queryKey: ["objects"] });
+    },
   });
 
   const remove = useMutation({
@@ -62,13 +84,15 @@ export default function Files() {
   const folders = (data?.folders ?? []).filter((f) => f !== "_manifest");
   const selectedObjects = visible.filter((o) => selected.has(o.key));
 
-  const toggle = (key: string) =>
+  const toggle = (key: string) => {
+    setConfirmingDelete(false);
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
       return next;
     });
+  };
 
   const copy = async (format: CopyFormat) => {
     await navigator.clipboard.writeText(formatLinks(selectedObjects, format, folder || "scratch"));
@@ -82,6 +106,7 @@ export default function Files() {
   };
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: drag-drop is an enhancement; the Upload button is the accessible path
     <div
       className="relative flex-1 overflow-y-auto p-8 pb-28"
       onDragOver={(e) => {
@@ -114,16 +139,36 @@ export default function Files() {
           )}
         </nav>
         <div className="flex items-center gap-2">
-          {!folder && (
-            <Button
-              onClick={() => {
-                const name = prompt("New folder name");
-                if (name) enterFolder(name.toLowerCase().replace(/[^a-z0-9/_-]+/g, "-"));
-              }}
-            >
-              New folder
-            </Button>
-          )}
+          {!folder &&
+            (newFolderOpen ? (
+              <form
+                className="flex items-center gap-2"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const name = newFolderName.toLowerCase().replace(/[^a-z0-9/_-]+/g, "-");
+                  if (name) {
+                    enterFolder(name);
+                    setNewFolderOpen(false);
+                    setNewFolderName("");
+                  }
+                }}
+              >
+                <input
+                  // biome-ignore lint/a11y/noAutofocus: focus follows the button that revealed this input
+                  autoFocus
+                  value={newFolderName}
+                  onChange={(e) => setNewFolderName(e.target.value)}
+                  onKeyDown={(e) => e.key === "Escape" && setNewFolderOpen(false)}
+                  placeholder="folder-name"
+                  className="w-40 rounded-lg border border-line bg-panel px-3 py-1.5 font-mono text-sm placeholder:text-muted"
+                />
+                <Button variant="primary" type="submit">
+                  Go
+                </Button>
+              </form>
+            ) : (
+              <Button onClick={() => setNewFolderOpen(true)}>New folder</Button>
+            ))}
           <Button variant="primary" onClick={() => fileInput.current?.click()}>
             Upload to {uploadTarget}
           </Button>
@@ -140,11 +185,17 @@ export default function Files() {
         </div>
       </div>
 
-      {upload.isPending && (
-        <p className="mt-3 text-sm text-honey">Uploading…</p>
+      {progress && (
+        <p className="mt-3 text-sm text-honey">
+          Uploading {progress.done}/{progress.total}…
+        </p>
       )}
-      {upload.isError && (
-        <p className="mt-3 text-sm text-danger">Upload failed: {upload.error.message}</p>
+      {failures.length > 0 && (
+        <div className="mt-3 rounded-lg border border-[rgba(255,110,110,0.35)] bg-[rgba(255,110,110,0.06)] px-3 py-2 text-sm text-danger">
+          {failures.map((f) => (
+            <p key={f}>{f}</p>
+          ))}
+        </div>
       )}
 
       {!folder && folders.length > 0 && (
@@ -233,9 +284,7 @@ export default function Files() {
 
       {selectedObjects.length > 0 && (
         <div className="fixed bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-line bg-panel-2 p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.5)]">
-          <span className="px-3 font-display text-sm">
-            {selectedObjects.length} selected
-          </span>
+          <span className="px-3 font-display text-sm">{selectedObjects.length} selected</span>
           <span className="mr-1 text-xs text-muted">copy as</span>
           {(
             [
@@ -255,16 +304,35 @@ export default function Files() {
             </button>
           ))}
           <div className="mx-1 h-5 w-px bg-line" />
-          <button
-            type="button"
-            onClick={() => {
-              if (confirm(`Delete ${selectedObjects.length} file(s)? Public URLs will 404.`))
-                remove.mutate([...selected]);
-            }}
-            className="rounded-lg px-2.5 py-1.5 font-mono text-xs text-danger transition-colors hover:bg-[rgba(255,110,110,0.12)]"
-          >
-            delete
-          </button>
+          {confirmingDelete ? (
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  remove.mutate([...selected]);
+                  setConfirmingDelete(false);
+                }}
+                className="rounded-lg bg-[rgba(255,110,110,0.15)] px-2.5 py-1.5 font-mono text-xs text-danger"
+              >
+                confirm — urls will 404
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmingDelete(false)}
+                className="rounded-lg px-2.5 py-1.5 font-mono text-xs text-muted hover:text-ink"
+              >
+                cancel
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirmingDelete(true)}
+              className="rounded-lg px-2.5 py-1.5 font-mono text-xs text-danger transition-colors hover:bg-[rgba(255,110,110,0.12)]"
+            >
+              delete
+            </button>
+          )}
           {copied && <span className="px-2 text-xs text-ok">copied</span>}
         </div>
       )}

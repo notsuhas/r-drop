@@ -1,8 +1,8 @@
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "../lib/api";
 import Button from "../components/Button";
 import Empty from "../components/Empty";
+import { api } from "../lib/api";
 
 export default function Invites() {
   const [email, setEmail] = useState("");
@@ -23,8 +23,8 @@ export default function Invites() {
     <div className="flex-1 overflow-y-auto p-8">
       <h1 className="font-display text-lg font-semibold">Invites</h1>
       <p className="mt-1 text-sm text-muted">
-        Invite a Google account by email. They sign in at ho-drive.theclau.de — no
-        link to send, the email itself is the invite.
+        Invite a Google account by email. They sign in at ho-drive.theclau.de — no link to send, the
+        email itself is the invite.
       </p>
 
       <form

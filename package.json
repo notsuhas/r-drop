@@ -1,0 +1,22 @@
+{
+  "name": "r-drop",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "bunx wrangler dev",
+    "dev:dashboard": "cd apps/dashboard && bun run dev",
+    "build": "cd apps/dashboard && bun run build",
+    "deploy": "bun run build && bunx wrangler deploy",
+    "db:generate": "cd apps/api && bunx drizzle-kit generate",
+    "db:migrate": "bunx wrangler d1 migrations apply r-drop-db --local",
+    "test": "cd apps/api && bun test && bunx vitest run && cd ../dashboard && bun test",
+    "lint": "bunx biome check .",
+    "clean": "git clean -Xdf -e '!wrangler.jsonc' -e '!.dev.vars'"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.10",
+    "fallow": "^3.17.0"
+  }
+}

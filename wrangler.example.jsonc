@@ -1,0 +1,37 @@
+// Copy to wrangler.jsonc and fill in your own values.
+{
+  "name": "r-drop",
+  "main": "apps/api/src/index.ts",
+  "compatibility_date": "2026-08-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "apps/dashboard/dist",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/"]
+  },
+  "vars": {
+    // Public base URL of the CDN (the R2 custom domain below).
+    "PUBLIC_BASE": "https://cdn.example.com",
+    // Where the dashboard + API live (the worker custom domain below).
+    "APP_BASE": "https://drop.example.com",
+    // Comma-separated Google emails that are admins (bypass the invite gate).
+    "ADMIN_EMAILS": "you@example.com"
+  },
+  "r2_buckets": [
+    // wrangler r2 bucket create r-drop-cdn
+    // wrangler r2 bucket domain add r-drop-cdn --domain cdn.example.com --zone-id <zone>
+    { "binding": "BUCKET", "bucket_name": "r-drop-cdn" }
+  ],
+  "d1_databases": [
+    // wrangler d1 create r-drop-db → paste the returned id here, then
+    // wrangler d1 migrations apply r-drop-db --remote
+    { "binding": "DB", "migrations_dir": "apps/api/migrations", "database_name": "r-drop-db", "database_id": "REPLACE_ME" }
+  ],
+  "routes": [
+    { "pattern": "drop.example.com", "custom_domain": true },
+    // Exact-root route only: the CDN landing page. All other CDN paths are
+    // served directly from R2 and never touch the worker.
+    { "pattern": "cdn.example.com/", "zone_name": "example.com" }
+  ]
+}

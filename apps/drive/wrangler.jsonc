@@ -1,0 +1,23 @@
+{
+  "name": "ho-drive",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "../web/dist",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "vars": {
+    "PUBLIC_BASE": "https://ho-drops.theclau.de"
+  },
+  "r2_buckets": [
+    { "binding": "BUCKET", "bucket_name": "ho-drops" }
+  ],
+  "d1_databases": [
+    { "binding": "DB", "database_name": "drive-db", "database_id": "88157903-0c71-4cd6-8b4a-e142bee2436e" }
+  ],
+  "routes": [
+    { "pattern": "ho-drive.theclau.de", "custom_domain": true }
+  ]
+}

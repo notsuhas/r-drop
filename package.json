@@ -1,0 +1,13 @@
+{
+  "name": "r-drop",
+  "private": true,
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "dev": "bun run --filter '*' dev",
+    "deploy": "cd apps/web && bun run build && cd ../drive && bunx wrangler deploy",
+    "lint": "bunx biome check ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.10"
+  }
+}

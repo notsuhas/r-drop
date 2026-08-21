@@ -10,7 +10,8 @@
   },
   "vars": {
     "PUBLIC_BASE": "https://ho-drops.theclau.de",
-    "ADMIN_EMAIL": "suhas.siriprole@gmail.com"
+    "ADMIN_EMAIL": "suhas.siriprole@gmail.com",
+    "APP_BASE": "https://ho-drive.theclau.de"
   },
   "r2_buckets": [
     { "binding": "BUCKET", "bucket_name": "ho-drops" }

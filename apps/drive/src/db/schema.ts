@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const user = sqliteTable("user", {
   id: text("id").primaryKey(),
@@ -18,14 +18,18 @@ export const session = sqliteTable("session", {
   updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
-  userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
 });
 
 export const account = sqliteTable("account", {
   id: text("id").primaryKey(),
   accountId: text("account_id").notNull(),
   providerId: text("provider_id").notNull(),
-  userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
   accessToken: text("access_token"),
   refreshToken: text("refresh_token"),
   idToken: text("id_token"),
@@ -53,13 +57,17 @@ export const invites = sqliteTable("invites", {
   usedAt: integer("used_at"),
 });
 
-export const apiTokens = sqliteTable("api_tokens", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  hash: text("hash").notNull(),
-  userId: text("user_id").notNull(),
-  prefix: text("prefix").notNull(),
-  scope: text("scope").notNull().default("write"),
-  createdAt: integer("created_at").notNull(),
-  lastUsedAt: integer("last_used_at"),
-});
+export const apiTokens = sqliteTable(
+  "api_tokens",
+  {
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    hash: text("hash").notNull(),
+    userId: text("user_id").notNull(),
+    prefix: text("prefix").notNull(),
+    scope: text("scope").notNull().default("write"),
+    createdAt: integer("created_at").notNull(),
+    lastUsedAt: integer("last_used_at"),
+  },
+  (t) => [index("idx_api_tokens_hash").on(t.hash)],
+);

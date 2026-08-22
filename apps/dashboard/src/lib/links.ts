@@ -1,3 +1,4 @@
+// Copy-as formats for the selection pill; unit-tested.
 import { basename, camelCase } from "./format";
 
 export type CopyFormat = "newline" | "json" | "ts" | "manifest";

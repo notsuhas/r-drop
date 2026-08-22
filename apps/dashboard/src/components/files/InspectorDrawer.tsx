@@ -21,7 +21,7 @@ export default function InspectorDrawer(props: IInspectorDrawer) {
   const [name, setName] = useState(basename(object.key));
 
   const rows: [string, string][] = [
-    ["type", object.contentType || fileKind(object.contentType, object.key)],
+    ["type", object.contentType || fileKind(object.contentType)],
     ["size", fmtSize(object.size)],
     ["uploaded", new Date(object.uploaded).toLocaleString()],
   ];

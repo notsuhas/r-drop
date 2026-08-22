@@ -19,10 +19,8 @@ describe("basename / extension", () => {
 });
 
 describe("fileKind", () => {
-  test("riv wins over content type", () =>
-    expect(fileKind("application/octet-stream", "anims/loader.riv")).toBe("rive"));
-  test("image", () => expect(fileKind("image/png", "x.png")).toBe("image"));
-  test("video", () => expect(fileKind("video/mp4", "x.mp4")).toBe("video"));
-  test("audio", () => expect(fileKind("audio/mpeg", "x.mp3")).toBe("audio"));
-  test("fallback", () => expect(fileKind("application/pdf", "x.pdf")).toBe("other"));
+  test("image", () => expect(fileKind("image/png")).toBe("image"));
+  test("video", () => expect(fileKind("video/mp4")).toBe("video"));
+  test("audio", () => expect(fileKind("audio/mpeg")).toBe("audio"));
+  test("fallback", () => expect(fileKind("application/pdf")).toBe("other"));
 });

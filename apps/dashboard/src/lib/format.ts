@@ -1,3 +1,4 @@
+// Pure display helpers shared across file components; unit-tested.
 export const fmtSize = (n: number) =>
   n < 1024
     ? `${n} B`
@@ -18,10 +19,9 @@ export const extension = (name: string) => {
   return dot > 0 ? name.slice(dot + 1).toLowerCase() : "";
 };
 
-export type FileKind = "image" | "rive" | "video" | "audio" | "other";
+export type FileKind = "image" | "video" | "audio" | "other";
 
-export function fileKind(contentType: string, key: string): FileKind {
-  if (extension(key) === "riv") return "rive";
+export function fileKind(contentType: string): FileKind {
   if (contentType.startsWith("image/")) return "image";
   if (contentType.startsWith("video/")) return "video";
   if (contentType.startsWith("audio/")) return "audio";

@@ -1,5 +1,6 @@
 import { LogOut } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import BrandMark from "../auth/BrandMark";
 
 interface ISidebarUser {
   name?: string;
@@ -24,8 +25,8 @@ export default function Sidebar(props: ISidebar) {
 
   return (
     <aside className="flex w-56 shrink-0 flex-col border-r border-line bg-panel">
-      <Link href="/" className="px-5 py-6 font-display text-lg font-bold tracking-tight">
-        ho<span className="text-honey">·</span>drive
+      <Link href="/" className="px-5 py-6">
+        <BrandMark />
       </Link>
       <nav className="flex flex-col gap-1 px-3">
         {tabs.map((t) => (

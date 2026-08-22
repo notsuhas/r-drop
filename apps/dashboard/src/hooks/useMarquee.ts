@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 
-export interface IMarqueeRect {
+interface IMarqueeRect {
   left: number;
   top: number;
   width: number;

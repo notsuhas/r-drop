@@ -1,12 +1,13 @@
-export interface IAgentSkillInput {
+// Every piece of copy-to-agent content lives in this one file so it can be
+// audited in a single place.
+
+export interface IAgentContentInput {
   publicBase: string;
   appBase: string;
   token?: string;
 }
 
-// Emits a SKILL.md the user drops into ~/.claude/skills/ho-drive/SKILL.md
-// (or .claude/skills/ in a repo) so every future session knows ho-drive.
-export function buildAgentSkill(input: IAgentSkillInput) {
+function buildAgentSkill(input: IAgentContentInput) {
   const { publicBase, appBase, token } = input;
   const tokenLine = token
     ? `The bearer token is \`${token}\` — prefer reading it from the HO_DRIVE_TOKEN env var if set.`
@@ -14,7 +15,7 @@ export function buildAgentSkill(input: IAgentSkillInput) {
 
   return `---
 name: ho-drive
-description: Upload assets (images, video, rive, audio) to the ho-drive CDN and reference public URLs in code instead of bundling files. Use when adding an asset to code, exporting from Figma, or when the user mentions ho-drive or asset uploads.
+description: Upload assets (images, video, audio, any file) to the ho-drive CDN and reference public URLs in code instead of bundling files. Use when adding an asset to code, exporting from Figma, or when the user mentions ho-drive or asset uploads.
 ---
 
 # ho·drive — asset CDN
@@ -50,4 +51,20 @@ Regenerated on every upload/delete/rename. Fetch the manifest to discover a fold
 - Rename or move: \`POST ${appBase}/api/objects/rename\` with JSON \`{ "key", "newKey" }\`
 - Delete: \`DELETE ${appBase}/api/objects/<key>\`
 `;
+}
+
+// The one-shot prompt a user pastes into any agent session. It instructs the
+// agent to install the skill permanently, so this works beyond the session.
+export function buildAgentSetupPrompt(input: IAgentContentInput) {
+  return `Set up "ho-drive" (my asset CDN) so this and every future session can upload assets for me.
+
+Do exactly this:
+1. Write the file ~/.claude/skills/ho-drive/SKILL.md (create directories as needed) with EXACTLY the content between SKILL-START and SKILL-END below. If a repo-local skill fits this project better, use .claude/skills/ho-drive/SKILL.md instead.
+2. Confirm the file was written by reading it back.
+3. From now on, follow that skill whenever a task needs an asset uploaded or referenced.
+4. Never print the bearer token back to me or commit it anywhere.
+
+SKILL-START
+${buildAgentSkill(input)}
+SKILL-END`;
 }

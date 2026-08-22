@@ -1,7 +1,4 @@
-import { lazy, Suspense } from "react";
 import { basename, extension, fileKind } from "../../lib/format";
-
-const RivePreview = lazy(() => import("./RivePreview"));
 
 interface IFilePreview {
   url: string;
@@ -15,7 +12,7 @@ const checker =
 
 export default function FilePreview(props: IFilePreview) {
   const { url, keyName, contentType } = props;
-  const kind = fileKind(contentType, keyName);
+  const kind = fileKind(contentType);
 
   if (kind === "image")
     return (
@@ -27,15 +24,6 @@ export default function FilePreview(props: IFilePreview) {
           className="h-full w-full object-contain p-2 transition-transform duration-200 group-hover:scale-[1.04]"
         />
       </div>
-    );
-
-  if (kind === "rive")
-    return (
-      <Suspense fallback={<ExtBadge label="riv" />}>
-        <div className={`h-full w-full ${checker}`}>
-          <RivePreview url={url} />
-        </div>
-      </Suspense>
     );
 
   if (kind === "video")

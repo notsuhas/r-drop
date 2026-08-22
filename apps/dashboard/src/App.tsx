@@ -25,7 +25,7 @@ export default function App() {
         Loading…
       </div>
     );
-  if (isError || !me) return <Login />;
+  if (isError || !me || me.actor.type !== "user") return <Login />;
 
   return (
     <div className="flex h-screen overflow-hidden">

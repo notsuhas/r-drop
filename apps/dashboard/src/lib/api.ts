@@ -1,89 +1,45 @@
-export interface IObject {
-  key: string;
-  size: number;
-  uploaded: string;
-  contentType: string;
-  url: string;
+// Typed API client via Hono RPC — response types are inferred from the worker's AppType.
+import { hc, type InferResponseType } from "hono/client";
+import type { AppType } from "../../../api/src/index";
+
+const client = hc<AppType>("/");
+
+interface IClientResponse {
+  ok: boolean;
+  statusText: string;
+  json(): Promise<unknown>;
 }
 
-export interface IListing {
-  folders: string[];
-  objects: IObject[];
-}
-
-export interface IInvite {
-  email: string;
-  createdBy: string;
-  createdAt: number;
-  usedAt: number | null;
-}
-
-export interface IApiToken {
-  id: string;
-  name: string;
-  prefix: string;
-  scope: string;
-  createdAt: number;
-  lastUsedAt: number | null;
-}
-
-export interface IMe {
-  actor: {
-    type: string;
-    userId: string;
-    email?: string;
-    name?: string;
-    picture?: string | null;
-  };
-  isAdmin: boolean;
-}
-
-async function req<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(path, init);
+async function unwrap<T>(res: IClientResponse): Promise<T> {
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error((body as { error?: string }).error ?? res.statusText);
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(body.error ?? res.statusText);
   }
   return res.json() as Promise<T>;
 }
 
+type Objects = InferResponseType<typeof client.api.objects.$get, 200>;
+export type IObject = Objects["objects"][number];
+
 export const api = {
-  me: () => req<IMe>("/api/me"),
-  objects: (prefix: string) => req<IListing>(`/api/objects?prefix=${encodeURIComponent(prefix)}`),
-  upload: (file: File, folder: string) => {
-    const form = new FormData();
-    form.set("file", file);
-    form.set("folder", folder);
-    return req<IObject & { manifestUrl: string }>("/api/upload", {
-      method: "POST",
-      body: form,
-    });
-  },
+  me: () => client.api.me.$get().then(unwrap<InferResponseType<typeof client.api.me.$get, 200>>),
+  objects: (prefix: string) => client.api.objects.$get({ query: { prefix } }).then(unwrap<Objects>),
   deleteObject: (key: string) =>
-    req<{ deleted: string }>(`/api/objects/${key}`, { method: "DELETE" }),
+    client.api.objects[":key{.+}"].$delete({ param: { key } }).then(unwrap),
   renameObject: (key: string, newKey: string) =>
-    req<{ key: string; url: string }>("/api/objects/rename", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ key, newKey }),
-    }),
-  invites: () => req<IInvite[]>("/api/invites"),
-  addInvite: (email: string) =>
-    req<{ email: string }>("/api/invites", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email }),
-    }),
+    client.api.objects.rename.$post({ json: { key, newKey } }).then(unwrap),
+  invites: () =>
+    client.api.invites.$get().then(unwrap<InferResponseType<typeof client.api.invites.$get, 200>>),
+  addInvite: (email: string) => client.api.invites.$post({ json: { email } }).then(unwrap),
   deleteInvite: (email: string) =>
-    req<{ deleted: string }>(`/api/invites/${encodeURIComponent(email)}`, {
-      method: "DELETE",
-    }),
-  tokens: () => req<IApiToken[]>("/api/tokens"),
+    client.api.invites[":email"].$delete({ param: { email } }).then(unwrap),
+  tokens: () =>
+    client.api.tokens.$get().then(unwrap<InferResponseType<typeof client.api.tokens.$get, 200>>),
   createToken: (name: string, scope: string) =>
-    req<{ token: string; name: string }>("/api/tokens", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ name, scope }),
-    }),
-  deleteToken: (id: string) => req<{ deleted: string }>(`/api/tokens/${id}`, { method: "DELETE" }),
+    client.api.tokens
+      .$post({ json: { name, scope } })
+      .then(unwrap<InferResponseType<typeof client.api.tokens.$post, 201>>),
+  renameToken: (id: string, name: string) =>
+    client.api.tokens[":id"].$patch({ param: { id }, json: { name } }).then(unwrap),
+  deleteToken: (id: string) => client.api.tokens[":id"].$delete({ param: { id } }).then(unwrap),
 };

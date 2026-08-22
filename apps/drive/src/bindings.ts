@@ -4,7 +4,7 @@ export type Bindings = {
   PUBLIC_BASE: string;
   APP_BASE: string;
   ADMIN_EMAIL: string;
-  BETTER_AUTH_SECRET: string;
-  GOOGLE_CLIENT_ID?: string;
-  GOOGLE_CLIENT_SECRET?: string;
+  WORKOS_API_KEY?: string;
+  WORKOS_CLIENT_ID?: string;
+  WORKOS_COOKIE_PASSWORD: string;
 };

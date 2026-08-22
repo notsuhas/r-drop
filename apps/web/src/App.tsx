@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "./lib/api";
-import { signOut, useSession } from "./lib/auth";
 import Files from "./pages/Files";
 import Invites from "./pages/Invites";
 import Login from "./pages/Login";
@@ -10,12 +9,16 @@ import Tokens from "./pages/Tokens";
 type Tab = "files" | "invites" | "tokens";
 
 export default function App() {
-  const { data: session, isPending } = useSession();
   const [tab, setTab] = useState<Tab>("files");
-  const { data: me } = useQuery({
+  const {
+    data: me,
+    isPending,
+    isError,
+  } = useQuery({
     queryKey: ["me"],
     queryFn: api.me,
-    enabled: !!session,
+    retry: false,
+    staleTime: 5 * 60 * 1000,
   });
 
   if (isPending)
@@ -24,7 +27,8 @@ export default function App() {
         Loading…
       </div>
     );
-  if (!session) return <Login />;
+  if (isError || !me) return <Login />;
+  const user = me.actor;
 
   const tabs: { id: Tab; label: string; adminOnly?: boolean }[] = [
     { id: "files", label: "Files" },
@@ -56,19 +60,21 @@ export default function App() {
         </nav>
         <div className="mt-auto border-t border-line p-4">
           <div className="flex items-center gap-2.5">
-            {session.user.image && (
+            {user.picture && (
               <img
-                src={session.user.image}
+                src={user.picture}
                 alt=""
                 className="h-7 w-7 rounded-full"
                 referrerPolicy="no-referrer"
               />
             )}
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-medium">{session.user.name}</p>
+              <p className="truncate text-xs font-medium">{user.name ?? user.email}</p>
               <button
                 type="button"
-                onClick={() => signOut()}
+                onClick={() => {
+                  window.location.href = "/api/auth/logout";
+                }}
                 className="text-xs text-muted hover:text-ink"
               >
                 Sign out

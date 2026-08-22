@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { createMiddleware } from "hono/factory";
-import { createAuth, isAdminEmail } from "../auth";
+import { getSessionUser, isAdminEmail } from "../auth";
 import * as schema from "../db/schema";
 import { sha256 } from "../lib/crypto";
 import type { Env } from "../types";
@@ -31,9 +31,16 @@ export const requireAuth = (scope: "read" | "write" = "read") =>
       c.set("actor", { type: "token", userId: token.userId, tokenId: token.id });
       return next();
     }
-    const session = await createAuth(c.env).api.getSession({ headers: c.req.raw.headers });
+    const session = await getSessionUser(c);
     if (!session) return c.json({ error: "unauthorized" }, 401);
-    c.set("actor", { type: "user", userId: session.user.id, email: session.user.email });
+    const { user } = session;
+    c.set("actor", {
+      type: "user",
+      userId: user.id,
+      email: user.email,
+      name: [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email,
+      picture: user.profilePictureUrl ?? null,
+    });
     return next();
   });
 

@@ -28,7 +28,13 @@ export interface IApiToken {
 }
 
 export interface IMe {
-  actor: { type: string; userId: string; email?: string };
+  actor: {
+    type: string;
+    userId: string;
+    email?: string;
+    name?: string;
+    picture?: string | null;
+  };
   isAdmin: boolean;
 }
 

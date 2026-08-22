@@ -15,6 +15,13 @@
       "when": 1787337900189,
       "tag": "0001_token_hash_index",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1787405149614,
+      "tag": "0002_drop_better_auth",
+      "breakpoints": true
     }
   ]
 }

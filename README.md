@@ -9,12 +9,13 @@ Personal asset CDN. Upload throwaway feature-dev assets (Figma exports etc.), re
 
 ## Layout
 
-- `apps/drive` — Cloudflare Worker. Hono API + serves the dashboard build via the `assets` binding. better-auth (Google-only, email-pinned invites) on D1 via drizzle.
+- `apps/drive` — Cloudflare Worker. Hono API + serves the dashboard build via the `assets` binding. WorkOS AuthKit sessions; invites + api tokens on D1 via drizzle.
 - `apps/web` — Vite + React dashboard. Built into `apps/web/dist`, deployed with the worker.
 
 ## Auth model
 
-- Google sign-in only. A `databaseHooks.user.create.before` hook rejects any email that isn't `ADMIN_EMAIL` or on the `invites` table. No invite links — admin invites an email, that Google account can then sign in.
+- Google sign-in only, via WorkOS AuthKit (WorkOS supplies managed Google OAuth credentials — no Google Cloud project needed). The callback rejects any email that isn't `ADMIN_EMAIL` or on the `invites` table (the WorkOS user is deleted again). No invite links — admin invites an email, that Google account can then sign in.
+- Sessions are WorkOS sealed sessions in an httpOnly cookie, refreshed transparently.
 - Agents use bearer tokens minted in the dashboard (sha256 stored, shown once).
 
 ## Agent upload
@@ -45,5 +46,5 @@ bun run db:migrate                  # apply migrations locally
 
 Deploy: `bun run deploy` from the repo root.
 
-Secrets (via `wrangler secret put` in apps/drive): `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`.
-Google OAuth redirect URI: `https://ho-drive.theclau.de/api/auth/callback/google`.
+Secrets (via `wrangler secret put` in apps/drive): `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_COOKIE_PASSWORD`.
+WorkOS dashboard setup: enable the Google provider, set redirect URI `https://ho-drive.theclau.de/api/auth/callback`, app homepage/logout return `https://ho-drive.theclau.de`.

@@ -3,7 +3,7 @@ import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import type { Env } from "@/types";
 import { getWorkos, workosConfigured } from "./workos";
 
-const SESSION_COOKIE = "hod_session";
+const SESSION_COOKIE = "rdrop_session";
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 
 export function setSessionCookie(c: Context<Env>, sealed: string) {

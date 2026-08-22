@@ -9,7 +9,7 @@ import { isAdminEmail } from "@/lib/admin";
 import { getSessionUser } from "@/lib/session";
 import type { Actor, Env } from "@/types";
 
-const TOKEN_FORMAT = /^hod_[a-f0-9]{32}$/;
+const TOKEN_FORMAT = /^rd_[a-f0-9]{32}$/;
 
 type BearerResult =
   | { actor: Actor; touch: () => Promise<unknown> }

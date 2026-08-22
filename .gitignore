@@ -5,3 +5,5 @@ dist
 *.local
 .DS_Store
 .playwright-mcp/
+.fallow
+/wrangler.jsonc

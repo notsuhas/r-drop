@@ -48,7 +48,7 @@ export const tokens = new Hono<Env>()
 
       const bytes = new Uint8Array(16);
       crypto.getRandomValues(bytes);
-      const token = `hod_${[...bytes].map((b) => b.toString(16).padStart(2, "0")).join("")}`;
+      const token = `rd_${[...bytes].map((b) => b.toString(16).padStart(2, "0")).join("")}`;
 
       const db = drizzle(c.env.DB, { schema });
       await db.insert(schema.apiTokens).values({

@@ -8,7 +8,7 @@ export default function BrandMark(props: IBrandMark) {
     <span
       className={`font-display font-bold tracking-tight ${size === "lg" ? "text-2xl" : "text-lg"}`}
     >
-      ho<span className="text-honey">·</span>drive
+      r<span className="text-honey">·</span>drop
     </span>
   );
 }

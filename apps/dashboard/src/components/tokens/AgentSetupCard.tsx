@@ -36,7 +36,7 @@ export default function AgentSetupCard() {
           </p>
           <p className="mt-1 max-w-xl text-sm text-muted">
             One click creates an upload token and copies a ready-made prompt. Paste it into any
-            agent session (Claude Code, Cursor, a cloud session) — the agent installs ho-drive as a
+            agent session (Claude Code, Cursor, a cloud session) — the agent installs r-drop as a
             permanent skill and can upload assets from then on.
           </p>
         </div>

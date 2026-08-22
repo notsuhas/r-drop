@@ -8,7 +8,7 @@ const dropsLanding = (appBase: string) => `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ho·drive cdn</title>
+<title>r·drop cdn</title>
 <meta name="theme-color" content="rgba(13,15,20,1)">
 <style>
   body { margin: 0; min-height: 100vh; display: grid; place-items: center;
@@ -24,7 +24,7 @@ const dropsLanding = (appBase: string) => `<!doctype html>
 </head>
 <body>
 <main>
-  <h1>ho<span>·</span>drive <span style="color:rgba(150,158,175,1)">cdn</span></h1>
+  <h1>r<span>·</span>drop <span style="color:rgba(150,158,175,1)">cdn</span></h1>
   <p>Public asset CDN. Objects live at <code>/&lt;folder&gt;/&lt;file&gt;</code>,
   folder manifests at <code>/_manifest/&lt;folder&gt;.json</code>.</p>
   <p><a href="${appBase}">open the drive →</a></p>

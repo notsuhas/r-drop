@@ -2,7 +2,7 @@
 import { useCallback, useState } from "react";
 import type { SortKey } from "@/components/files/ListView";
 
-const VIEW_STORAGE_KEY = "ho-drive:view";
+const VIEW_STORAGE_KEY = "r-drop:view";
 
 export function useViewPrefs() {
   const [view, setView] = useState<"grid" | "list">(

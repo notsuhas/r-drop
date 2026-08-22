@@ -1,0 +1,36 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+
+      - name: lint
+        run: bunx biome check .
+
+      - name: typecheck
+        run: |
+          (cd apps/api && bunx tsc --noEmit -p .)
+          (cd apps/dashboard && bunx tsc -b)
+
+      - name: unit tests
+        run: |
+          (cd apps/api && bun test)
+          (cd apps/dashboard && bun test)
+
+      - name: integration tests (workers pool)
+        run: cd apps/api && bunx vitest run
+
+      - name: build dashboard
+        run: cd apps/dashboard && bun run build
+
+      - name: codebase intelligence
+        run: bunx fallow

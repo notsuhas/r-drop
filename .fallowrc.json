@@ -1,6 +1,6 @@
 {
   // Test suites are entry points (bun test), not dead files.
-  "entry": ["**/__tests__/**/*.test.ts"],
+  "entry": ["**/__tests__/**/*.test.ts", "**/__tests__/**/*.test.tsx", "**/__tests__/**/*.spec.ts", "**/test-setup.ts"],
   "health": {
     // No coverage data is fed to fallow, so CRAP scores are estimates; the
     // real complexity gates are maxCyclomatic/maxCognitive defaults.

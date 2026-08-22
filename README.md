@@ -94,9 +94,11 @@ Quality gates (all must pass — CI is just these four commands):
 ```bash
 bunx biome check .        # lint + format
 bunx tsc --noEmit -p apps/api && (cd apps/dashboard && bunx tsc -b)
-bun test                  # run inside apps/api and apps/dashboard
+bun run test              # unit tests (bun) + worker integration tests (vitest-pool-workers)
 bunx fallow               # dead code, duplication, complexity — kept at zero findings
 ```
+
+Integration tests run the real worker on Miniflare with in-memory R2 + D1 (`apps/api/wrangler.test.jsonc`), covering the full bearer-token path: auth matrix, uploads, manifests, rename/move, deletes. CI (`.github/workflows/ci.yml`) runs all of the above on every push.
 
 Conventions: atoms/molecules composition in the dashboard (`components/ui` → `components/<domain>` → pages compose), one-concern-per-file routes in the API, `@/` path aliases (no `../..` imports), pure logic extracted into unit-tested `lib/` functions.
 

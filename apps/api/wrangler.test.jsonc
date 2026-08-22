@@ -1,0 +1,21 @@
+// Isolated config for vitest-pool-workers — real bindings on Miniflare,
+// no dependence on the gitignored instance wrangler.jsonc.
+{
+  "name": "r-drop-test",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "PUBLIC_BASE": "https://cdn.test",
+    "APP_BASE": "https://app.test",
+    "ADMIN_EMAILS": "admin@test.dev"
+  },
+  "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "test-bucket" }],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "test-db",
+      "database_id": "00000000-0000-0000-0000-000000000000"
+    }
+  ]
+}

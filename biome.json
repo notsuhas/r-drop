@@ -1,7 +1,7 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.5.10/schema.json",
   "files": {
-    "includes": ["apps/*/src/**", "apps/drive/drizzle.config.ts", "apps/web/vite.config.ts"]
+    "includes": ["apps/*/src/**", "apps/api/drizzle.config.ts", "apps/dashboard/vite.config.ts"]
   },
   "formatter": {
     "indentStyle": "space",

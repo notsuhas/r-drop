@@ -9,8 +9,8 @@ Personal asset CDN. Upload throwaway feature-dev assets (Figma exports etc.), re
 
 ## Layout
 
-- `apps/drive` — Cloudflare Worker. Hono API + serves the dashboard build via the `assets` binding. WorkOS AuthKit sessions; invites + api tokens on D1 via drizzle.
-- `apps/web` — Vite + React dashboard. Built into `apps/web/dist`, deployed with the worker.
+- `apps/api` — Cloudflare Worker. Hono API + serves the dashboard build via the `assets` binding. WorkOS AuthKit sessions; invites + api tokens on D1 via drizzle.
+- `apps/dashboard` — Vite + React dashboard. Built into `apps/dashboard/dist`, deployed with the worker.
 
 ## Auth model
 
@@ -39,12 +39,12 @@ https://ho-drive-cdn.theclau.de/_manifest/<folder>.json
 
 ```bash
 bun install
-cd apps/web && bun run build        # dashboard → dist
-cd ../drive && bun run dev          # wrangler dev (local D1/R2)
+cd apps/dashboard && bun run build        # dashboard → dist
+cd ../api && bun run dev          # wrangler dev (local D1/R2)
 bun run db:migrate                  # apply migrations locally
 ```
 
 Deploy: `bun run deploy` from the repo root.
 
-Secrets (via `wrangler secret put` in apps/drive): `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_COOKIE_PASSWORD`.
+Secrets (via `wrangler secret put` in apps/api): `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_COOKIE_PASSWORD`.
 WorkOS dashboard setup: enable the Google provider, set redirect URI `https://ho-drive.theclau.de/api/auth/callback`, app homepage/logout return `https://ho-drive.theclau.de`.

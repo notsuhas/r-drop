@@ -5,7 +5,7 @@
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "binding": "ASSETS",
-    "directory": "../web/dist",
+    "directory": "../dashboard/dist",
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*", "/"]
   },
@@ -15,7 +15,7 @@
     "APP_BASE": "https://ho-drive.theclau.de"
   },
   "r2_buckets": [
-    { "binding": "BUCKET", "bucket_name": "ho-drops" }
+    { "binding": "BUCKET", "bucket_name": "ho-drive-cdn" }
   ],
   "d1_databases": [
     { "binding": "DB", "database_name": "drive-db", "database_id": "88157903-0c71-4cd6-8b4a-e142bee2436e" }

@@ -4,7 +4,7 @@ import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import type { Bindings } from "./bindings";
 import type { Env } from "./types";
 
-export const SESSION_COOKIE = "hod_session";
+const SESSION_COOKIE = "hod_session";
 
 export const isAdminEmail = (env: Bindings, email: string) =>
   env.ADMIN_EMAILS.toLowerCase()

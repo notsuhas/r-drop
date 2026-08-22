@@ -1,115 +1,200 @@
-import { Check, Info } from "lucide-react";
-import RenameField from "@/components/files/RenameField";
+// Dense list. Rows are separated by hairlines rather than boxed in a grid of
+// cell borders — the old bordered table read as a spreadsheet, not a drive.
+import { ArrowDown, ArrowUp, Folder, MoreVertical } from "lucide-react";
+import FilePreview from "@/components/files/FilePreview";
+import Checkbox from "@/components/ui/Checkbox";
+import IconButton from "@/components/ui/IconButton";
+import type { SortKey } from "@/hooks/useViewPrefs";
 import type { IObject } from "@/lib/api";
-import { basename, extension, fmtSize } from "@/lib/format";
-import { folderOf } from "@/lib/links";
-
-export type SortKey = "name" | "size" | "uploaded";
+import { cx } from "@/lib/cx";
+import type { IFolderEntry } from "@/lib/entries";
+import { basename, extension, fmtSize, fmtWhen, fmtWhenExact } from "@/lib/format";
 
 interface IListView {
+  folders: IFolderEntry[];
   objects: IObject[];
   selected: Set<string>;
-  onRename: (key: string, newKey: string) => void;
+  focusKey: string | null;
   sortKey: SortKey;
   sortAsc: boolean;
+  allSelected: boolean;
+  someSelected: boolean;
   onSort: (key: SortKey) => void;
-  onToggle: (key: string) => void;
-  onInspect: (object: IObject) => void;
+  onSelectAll: () => void;
+  onEnterFolder: (name: string) => void;
+  onSelect: (key: string, event: React.MouseEvent) => void;
+  onOpen: (object: IObject) => void;
+  onMenu: (key: string, event: React.MouseEvent) => void;
 }
 
-const columns: { id: SortKey; label: string; align?: string }[] = [
-  { id: "name", label: "name" },
-  { id: "size", label: "size", align: "text-right" },
-  { id: "uploaded", label: "uploaded", align: "text-right" },
+const COLUMNS: { id: SortKey; label: string; className: string }[] = [
+  { id: "name", label: "Name", className: "text-left" },
+  { id: "size", label: "Size", className: "hidden sm:table-cell text-right w-24" },
+  { id: "uploaded", label: "Uploaded", className: "hidden md:table-cell text-right w-40" },
 ];
 
 export default function ListView(props: IListView) {
-  const { objects, selected, sortKey, sortAsc, onSort, onToggle, onInspect, onRename } = props;
+  const {
+    folders,
+    objects,
+    selected,
+    focusKey,
+    sortKey,
+    sortAsc,
+    allSelected,
+    someSelected,
+    onSort,
+    onSelectAll,
+    onEnterFolder,
+    onSelect,
+    onOpen,
+    onMenu,
+  } = props;
+
   return (
-    <table className="mt-6 w-full border-collapse border border-line text-sm">
-      <thead>
-        <tr className="border-b border-line bg-panel">
-          <th className="w-10 border-r border-line" aria-label="Selection" />
-          {columns.map((col) => (
-            <th key={col.id} className={`border-r border-line last:border-r-0 ${col.align ?? ""}`}>
-              <button
-                type="button"
-                onClick={() => onSort(col.id)}
-                className={`w-full px-3 py-2 font-display text-xs font-semibold uppercase tracking-wider text-muted hover:text-ink ${
-                  col.align ?? "text-left"
-                }`}
-              >
-                {col.label}
-                {sortKey === col.id && (
-                  <span className="ml-1 text-honey">{sortAsc ? "↑" : "↓"}</span>
-                )}
-              </button>
+    <div className="overflow-hidden rounded-lg bg-surface">
+      <table className="w-full table-fixed border-collapse text-sm">
+        <thead>
+          <tr className="border-b border-hairline">
+            <th scope="col" className="w-10 px-3">
+              <Checkbox
+                checked={allSelected}
+                indeterminate={someSelected && !allSelected}
+                label={allSelected ? "Clear selection" : "Select all files"}
+                onChange={onSelectAll}
+              />
             </th>
-          ))}
-          <th className="w-12" aria-label="Actions" />
-        </tr>
-      </thead>
-      <tbody>
-        {objects.map((o) => {
-          const isSel = selected.has(o.key);
-          return (
-            <tr
-              key={o.key}
-              data-key={o.key}
-              className={`cursor-pointer border-b border-line transition-colors last:border-b-0 ${
-                isSel ? "bg-[rgba(255,178,86,0.08)]" : "hover:bg-panel"
-              }`}
-              onClick={() => onToggle(o.key)}
-            >
-              <td className="border-r border-line px-3">
-                <span
-                  className={`flex h-4 w-4 items-center justify-center border ${
-                    isSel ? "border-honey bg-honey text-honey-ink" : "border-line"
-                  }`}
+            {COLUMNS.map((col) => {
+              const active = sortKey === col.id;
+              return (
+                <th
+                  key={col.id}
+                  scope="col"
+                  aria-sort={active ? (sortAsc ? "ascending" : "descending") : "none"}
+                  className={col.className}
                 >
-                  {isSel && <Check size={10} strokeWidth={3} />}
-                </span>
-              </td>
-              <td className="border-r border-line px-3 py-2">
-                <div className="flex items-center gap-2">
-                  {/* biome-ignore lint/a11y/noStaticElementInteractions: stops the row toggle while renaming */}
-                  <span
-                    onClick={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => e.stopPropagation()}
-                    className="min-w-0"
+                  <button
+                    type="button"
+                    onClick={() => onSort(col.id)}
+                    className={cx(
+                      "inline-flex h-9 items-center gap-1 rounded-sm px-2 text-xs font-medium transition-colors duration-(--duration-fast)",
+                      active ? "text-ink" : "text-ink-3 hover:text-ink",
+                    )}
                   >
-                    <RenameField
-                      value={basename(o.key)}
-                      compact
-                      onRename={(next) => onRename(o.key, `${folderOf(o.key)}/${next}`)}
-                    />
-                  </span>
-                  <span className="text-xs uppercase text-muted">{extension(o.key)}</span>
-                </div>
-              </td>
-              <td className="border-r border-line px-3 py-2 text-right font-mono text-xs">
-                {fmtSize(o.size)}
-              </td>
-              <td className="border-r border-line px-3 py-2 text-right font-mono text-xs text-muted">
-                {new Date(o.uploaded).toLocaleString()}
-              </td>
-              <td className="px-3 text-center">
+                    {col.label}
+                    {active &&
+                      (sortAsc ? (
+                        <ArrowUp size={11} className="text-honey" />
+                      ) : (
+                        <ArrowDown size={11} className="text-honey" />
+                      ))}
+                  </button>
+                </th>
+              );
+            })}
+            <th scope="col" className="w-11">
+              <span className="sr-only">Actions</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {folders.map((f) => (
+            <tr
+              key={f.name}
+              className="group border-b border-hairline transition-colors duration-(--duration-fast) last:border-b-0 hover:bg-surface-2"
+            >
+              <td className="px-3" />
+              <td className="px-2 py-1.5">
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onInspect(o);
-                  }}
-                  className="text-muted hover:text-ink"
-                  aria-label={`Details for ${basename(o.key)}`}
+                  onClick={() => onEnterFolder(f.name)}
+                  className="flex min-w-0 items-center gap-2.5 text-left"
                 >
-                  <Info size={14} />
+                  <Folder size={15} className="shrink-0 fill-honey/20 text-honey" />
+                  <span className="min-w-0 truncate font-mono text-sm">{f.label}</span>
                 </button>
               </td>
+              <td className="hidden px-2 text-right font-mono text-xs text-ink-2 sm:table-cell">
+                {fmtSize(f.size)}
+              </td>
+              <td className="hidden px-2 text-right font-mono text-xs text-ink-3 md:table-cell">
+                —
+              </td>
+              <td />
             </tr>
-          );
-        })}
-      </tbody>
-    </table>
+          ))}
+
+          {objects.map((o) => {
+            const isSel = selected.has(o.key);
+            const name = basename(o.key);
+            return (
+              <tr
+                key={o.key}
+                data-key={o.key}
+                onClick={(e) => onSelect(o.key, e)}
+                onDoubleClick={() => onOpen(o)}
+                onContextMenu={(e) => onMenu(o.key, e)}
+                className={cx(
+                  "group cursor-default border-b border-hairline transition-colors duration-(--duration-fast) last:border-b-0",
+                  isSel ? "bg-honey-wash" : "hover:bg-surface-2",
+                  focusKey === o.key && !isSel && "bg-surface-2",
+                )}
+              >
+                <td className="px-3">
+                  <Checkbox
+                    checked={isSel}
+                    label={`Select ${name}`}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      onSelect(o.key, e);
+                    }}
+                  />
+                </td>
+                <td className="px-2 py-1.5">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <span className="bg-checker h-7 w-7 shrink-0 overflow-hidden rounded-sm bg-surface-2">
+                      <FilePreview
+                        variant="row"
+                        url={o.url}
+                        keyName={o.key}
+                        contentType={o.contentType}
+                      />
+                    </span>
+                    <span className="min-w-0 truncate font-mono text-sm" title={name}>
+                      {name}
+                    </span>
+                    <span className="shrink-0 font-mono text-2xs uppercase text-ink-3">
+                      {extension(o.key)}
+                    </span>
+                  </div>
+                </td>
+                <td className="hidden px-2 text-right font-mono text-xs text-ink-2 sm:table-cell">
+                  {fmtSize(o.size)}
+                </td>
+                <td
+                  className="hidden px-2 text-right font-mono text-xs text-ink-3 md:table-cell"
+                  title={fmtWhenExact(o.uploaded)}
+                >
+                  {fmtWhen(o.uploaded)}
+                </td>
+                <td className="px-1 text-center">
+                  <IconButton
+                    size="sm"
+                    label={`More actions for ${name}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onMenu(o.key, e);
+                    }}
+                    className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+                  >
+                    <MoreVertical size={14} />
+                  </IconButton>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }

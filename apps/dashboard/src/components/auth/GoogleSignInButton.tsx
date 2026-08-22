@@ -5,9 +5,9 @@ export default function GoogleSignInButton() {
       onClick={() => {
         window.location.href = "/api/auth/login";
       }}
-      className="flex w-full items-center justify-center gap-3 border-2 border-honey bg-honey px-4 py-3 font-display font-semibold text-honey-ink transition-all hover:bg-[rgba(255,190,110,1)] active:translate-x-[1px] active:translate-y-[1px]"
+      className="flex w-full items-center justify-center gap-2.5 rounded-md bg-honey px-4 py-2.5 font-medium text-honey-ink shadow-e1 transition-colors duration-(--duration-fast) ease-(--ease-out-quart) hover:bg-honey-dim"
     >
-      <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
+      <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" aria-hidden="true">
         <path
           fill="currentColor"
           d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.9h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.3 3-7.4Z"

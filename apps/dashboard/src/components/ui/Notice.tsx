@@ -1,14 +1,26 @@
+import { AlertTriangle, CheckCircle2, Info } from "lucide-react";
+import { cx } from "@/lib/cx";
+
+type Tone = "danger" | "ok" | "info";
+
 interface INotice {
   children: React.ReactNode;
-  tone?: "danger" | "ok";
+  tone?: Tone;
 }
 
-const tones = {
-  danger: "border-[rgba(255,110,110,0.35)] bg-[rgba(255,110,110,0.06)] text-danger",
-  ok: "border-[rgba(97,214,155,0.35)] bg-[rgba(97,214,155,0.06)] text-ok",
+const tones: Record<Tone, { box: string; icon: React.ReactNode }> = {
+  danger: { box: "bg-danger-wash text-danger", icon: <AlertTriangle size={14} /> },
+  ok: { box: "bg-ok-wash text-ok", icon: <CheckCircle2 size={14} /> },
+  info: { box: "bg-surface-2 text-ink-2", icon: <Info size={14} /> },
 };
 
 export default function Notice(props: INotice) {
   const { children, tone = "danger" } = props;
-  return <p className={`border px-3 py-2 text-sm ${tones[tone]}`}>{children}</p>;
+  const { box, icon } = tones[tone];
+  return (
+    <div className={cx("flex items-start gap-2.5 rounded-md px-3 py-2.5 text-sm", box)}>
+      <span className="mt-px shrink-0">{icon}</span>
+      <p className="min-w-0">{children}</p>
+    </div>
+  );
 }

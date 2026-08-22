@@ -1,14 +1,15 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Sparkles } from "lucide-react";
-import { useState } from "react";
 import Button from "@/components/ui/Button";
+import Notice from "@/components/ui/Notice";
+import { useToast } from "@/hooks/useToast";
 import { buildAgentSetupPrompt } from "@/lib/agent-content";
 import { api } from "@/lib/api";
 import { getConfig } from "@/lib/config";
 
 export default function AgentSetupCard() {
-  const [done, setDone] = useState<string | null>(null);
   const qc = useQueryClient();
+  const { toast } = useToast();
 
   const setup = useMutation({
     mutationFn: async () => {
@@ -23,34 +24,33 @@ export default function AgentSetupCard() {
       await navigator.clipboard.writeText(prompt);
       return name;
     },
-    onSuccess: (name) => setDone(name),
+    onSuccess: (name) => toast(`Prompt copied. Token "${name}" is in the list below.`, "ok"),
     onSettled: () => qc.invalidateQueries({ queryKey: ["tokens"] }),
   });
 
   return (
-    <div className="border-2 border-honey bg-[rgba(255,178,86,0.06)] p-5">
-      <div className="flex items-start justify-between gap-6">
-        <div>
-          <p className="flex items-center gap-2 font-display text-base font-semibold">
-            <Sparkles size={16} className="text-honey" /> Let an agent upload for you
+    <div className="rounded-lg bg-surface p-5">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <p className="flex items-center gap-2 font-medium text-ink">
+            <Sparkles size={15} className="shrink-0 text-honey" />
+            Set up an agent to upload for you
           </p>
-          <p className="mt-1 max-w-xl text-sm text-muted">
-            One click creates an upload token and copies a ready-made prompt. Paste it into any
-            agent session (Claude Code, Cursor, a cloud session) — the agent installs r-drop as a
-            permanent skill and can upload assets from then on.
+          <p className="mt-1.5 max-w-xl text-sm text-ink-2">
+            Creates an upload token and copies a ready-made prompt. Paste it into any agent session
+            — Claude Code, Cursor, a cloud session — and the agent installs r-drop as a permanent
+            skill it can use from then on.
           </p>
         </div>
-        <Button variant="primary" onClick={() => setup.mutate()} disabled={setup.isPending}>
-          {setup.isPending ? "Setting up…" : "Create token + copy prompt"}
+        <Button variant="primary" loading={setup.isPending} onClick={() => setup.mutate()}>
+          {setup.isPending ? "Setting up…" : "Create token and copy prompt"}
         </Button>
       </div>
-      {done && (
-        <p className="mt-3 text-sm text-ok">
-          Copied. Paste it into your agent — token "{done}" is in the list below (rename or delete
-          it anytime).
-        </p>
+      {setup.isError && (
+        <div className="mt-4">
+          <Notice>{setup.error.message}</Notice>
+        </div>
       )}
-      {setup.isError && <p className="mt-3 text-sm text-danger">{setup.error.message}</p>}
     </div>
   );
 }

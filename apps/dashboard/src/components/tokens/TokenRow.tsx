@@ -1,6 +1,10 @@
-import { Check, Pencil, Trash2, X } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { useState } from "react";
-import Input from "@/components/ui/Input";
+import RenameField from "@/components/files/RenameField";
+import Badge from "@/components/ui/Badge";
+import Button from "@/components/ui/Button";
+import IconButton from "@/components/ui/IconButton";
+import { fmtWhen } from "@/lib/format";
 
 interface ITokenRowData {
   id: string;
@@ -18,90 +22,47 @@ interface ITokenRow {
 
 export default function TokenRow(props: ITokenRow) {
   const { token, onRename, onDelete } = props;
-  const [editing, setEditing] = useState(false);
-  const [name, setName] = useState(token.name);
   const [confirming, setConfirming] = useState(false);
 
   return (
-    <div className="flex items-center justify-between gap-4 px-4 py-3">
+    <div className="group flex flex-wrap items-center justify-between gap-3 px-4 py-3 transition-colors duration-(--duration-fast) hover:bg-surface-2">
       <div className="min-w-0 flex-1">
-        {editing ? (
-          <form
-            className="flex items-center gap-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (name.trim() && name !== token.name) onRename(name.trim());
-              setEditing(false);
-            }}
-          >
-            <Input
-              value={name}
-              onChange={setName}
-              autoFocus
-              onEscape={() => setEditing(false)}
-              className="py-1"
-            />
-            <button type="submit" className="text-ok" aria-label="Save name">
-              <Check size={14} />
-            </button>
-            <button
-              type="button"
-              onClick={() => setEditing(false)}
-              className="text-muted"
-              aria-label="Cancel rename"
-            >
-              <X size={14} />
-            </button>
-          </form>
-        ) : (
-          <p className="flex items-center gap-2 font-display text-sm">
-            {token.name}
-            <button
-              type="button"
-              onClick={() => {
-                setName(token.name);
-                setEditing(true);
-              }}
-              className="text-muted hover:text-ink"
-              aria-label={`Rename ${token.name}`}
-            >
-              <Pencil size={12} />
-            </button>
-          </p>
-        )}
-        <p className="mt-0.5 font-mono text-xs text-muted">
-          {token.prefix}… · {token.scope} ·{" "}
-          {token.lastUsedAt
-            ? `used ${new Date(token.lastUsedAt).toLocaleDateString()}`
-            : "never used"}
+        <RenameField value={token.name} onRename={onRename} />
+        <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-2xs text-ink-3">
+          <span>{token.prefix}…</span>
+          <span aria-hidden="true">·</span>
+          <span>{token.scope}</span>
+          <span aria-hidden="true">·</span>
+          <span>
+            {token.lastUsedAt
+              ? `last used ${fmtWhen(new Date(token.lastUsedAt).toISOString())}`
+              : "never used"}
+          </span>
         </p>
       </div>
+
       {confirming ? (
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={onDelete}
-            className="border-2 border-[rgba(255,110,110,0.5)] px-2.5 py-1 font-display text-xs font-semibold uppercase tracking-wider text-danger"
-          >
-            Confirm delete
-          </button>
-          <button
-            type="button"
-            onClick={() => setConfirming(false)}
-            className="text-xs text-muted hover:text-ink"
-          >
-            cancel
-          </button>
+          <p className="text-xs text-danger">Anything using it stops working.</p>
+          <Button size="sm" variant="danger" onClick={onDelete}>
+            Revoke
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setConfirming(false)}>
+            Keep
+          </Button>
         </div>
       ) : (
-        <button
-          type="button"
-          onClick={() => setConfirming(true)}
-          className="text-muted transition-colors hover:text-danger"
-          aria-label={`Delete ${token.name}`}
-        >
-          <Trash2 size={15} />
-        </button>
+        <div className="flex items-center gap-2">
+          {!token.lastUsedAt && <Badge tone="neutral">Unused</Badge>}
+          <IconButton
+            variant="danger"
+            label={`Revoke ${token.name}`}
+            onClick={() => setConfirming(true)}
+            className="opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+          >
+            <Trash2 size={14} />
+          </IconButton>
+        </div>
       )}
     </div>
   );

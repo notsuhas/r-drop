@@ -1,9 +1,13 @@
-import { Download, ExternalLink, Pencil, X } from "lucide-react";
-import { useState } from "react";
+import { Download, ExternalLink, X } from "lucide-react";
+import FilePreview from "@/components/files/FilePreview";
+import FolderSelect from "@/components/files/FolderSelect";
+import RenameField from "@/components/files/RenameField";
 import Button from "@/components/ui/Button";
+import CopyField from "@/components/ui/CopyField";
 import type { IObject } from "@/lib/api";
+import { downloadFile } from "@/lib/download";
 import { basename, fileKind, fmtSize } from "@/lib/format";
-import FilePreview from "./FilePreview";
+import { folderOf } from "@/lib/links";
 
 interface IInspectorDrawer {
   object: IObject;
@@ -11,14 +15,12 @@ interface IInspectorDrawer {
   onClose: () => void;
   onDelete: () => void;
   onRename: (newKey: string) => void;
-  onCopied: () => void;
 }
 
 export default function InspectorDrawer(props: IInspectorDrawer) {
-  const { object, folders, onClose, onDelete, onRename, onCopied } = props;
-  const folder = object.key.includes("/") ? object.key.slice(0, object.key.lastIndexOf("/")) : "";
-  const [editing, setEditing] = useState(false);
-  const [name, setName] = useState(basename(object.key));
+  const { object, folders, onClose, onDelete, onRename } = props;
+  const folder = folderOf(object.key);
+  const name = basename(object.key);
 
   const rows: [string, string][] = [
     ["type", object.contentType || fileKind(object.contentType, object.key)],
@@ -26,55 +28,10 @@ export default function InspectorDrawer(props: IInspectorDrawer) {
     ["uploaded", new Date(object.uploaded).toLocaleString()],
   ];
 
-  const download = async () => {
-    const blob = await fetch(object.url).then((r) => r.blob());
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = basename(object.key);
-    a.click();
-    URL.revokeObjectURL(a.href);
-  };
-
   return (
     <aside className="fixed inset-y-0 right-0 z-30 flex w-96 flex-col overflow-y-auto border-l border-line bg-panel shadow-[-6px_0_0_rgba(0,0,0,0.55)]">
       <div className="flex items-center justify-between gap-2 border-b border-line px-5 py-3">
-        {editing ? (
-          <form
-            className="flex min-w-0 flex-1 items-center gap-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (name && name !== basename(object.key)) onRename(`${folder}/${name}`);
-              setEditing(false);
-            }}
-          >
-            <input
-              // biome-ignore lint/a11y/noAutofocus: focus follows the rename button
-              autoFocus
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => e.key === "Escape" && setEditing(false)}
-              className="min-w-0 flex-1 border border-line bg-bg px-2 py-1 font-mono text-sm"
-            />
-            <Button variant="primary" type="submit">
-              Save
-            </Button>
-          </form>
-        ) : (
-          <span className="flex min-w-0 items-center gap-2">
-            <span className="truncate font-mono text-sm">{basename(object.key)}</span>
-            <button
-              type="button"
-              onClick={() => {
-                setName(basename(object.key));
-                setEditing(true);
-              }}
-              className="shrink-0 text-muted hover:text-ink"
-              aria-label="Rename file"
-            >
-              <Pencil size={13} />
-            </button>
-          </span>
-        )}
+        <RenameField value={name} onRename={(next) => onRename(`${folder}/${next}`)} />
         <button
           type="button"
           onClick={onClose}
@@ -97,33 +54,17 @@ export default function InspectorDrawer(props: IInspectorDrawer) {
         <div className="flex items-center justify-between gap-4">
           <dt className="text-xs uppercase tracking-wide text-muted">folder</dt>
           <dd>
-            <select
-              value={folder}
-              onChange={(e) => onRename(`${e.target.value}/${basename(object.key)}`)}
-              className="border border-line bg-bg px-2 py-1 font-mono text-xs"
-            >
-              {[folder, ...folders.filter((f) => f !== folder)].map((f) => (
-                <option key={f} value={f}>
-                  {f}
-                </option>
-              ))}
-            </select>
+            <FolderSelect
+              current={folder}
+              folders={folders}
+              onMove={(target) => onRename(`${target}/${name}`)}
+            />
           </dd>
         </div>
         <div>
           <dt className="text-xs uppercase tracking-wide text-muted">public url</dt>
-          <dd className="mt-1 flex items-center gap-2">
-            <code className="min-w-0 flex-1 truncate bg-bg px-2.5 py-1.5 font-mono text-xs">
-              {object.url}
-            </code>
-            <Button
-              onClick={() => {
-                navigator.clipboard.writeText(object.url);
-                onCopied();
-              }}
-            >
-              Copy
-            </Button>
+          <dd className="mt-1">
+            <CopyField value={object.url} />
           </dd>
         </div>
       </dl>
@@ -139,7 +80,7 @@ export default function InspectorDrawer(props: IInspectorDrawer) {
           </a>
           <button
             type="button"
-            onClick={download}
+            onClick={() => downloadFile(object.url, name)}
             className="inline-flex items-center gap-1 font-mono text-xs text-muted hover:text-ink"
           >
             <Download size={12} /> download

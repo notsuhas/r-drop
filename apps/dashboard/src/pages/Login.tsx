@@ -1,5 +1,6 @@
 import BrandMark from "@/components/auth/BrandMark";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
+import Notice from "@/components/ui/Notice";
 
 const ERROR_COPY: Record<string, string> = {
   not_invited: "That Google account isn't invited. Ask for an invite, then sign in again.",
@@ -17,9 +18,9 @@ export default function Login() {
           Invite-only asset drive. Sign in with the Google account that was invited.
         </p>
         {error && ERROR_COPY[error] && (
-          <p className="mt-4 border border-[rgba(255,110,110,0.35)] bg-[rgba(255,110,110,0.06)] px-3 py-2 text-sm text-danger">
-            {ERROR_COPY[error]}
-          </p>
+          <div className="mt-4">
+            <Notice>{ERROR_COPY[error]}</Notice>
+          </div>
         )}
         <div className="mt-8">
           <GoogleSignInButton />

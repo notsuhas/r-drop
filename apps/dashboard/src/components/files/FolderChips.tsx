@@ -1,4 +1,5 @@
 import { Folder, FolderPlus } from "lucide-react";
+import { normalizeFolderName } from "@/lib/folder-name";
 
 interface IFolderChips {
   folders: string[];
@@ -22,10 +23,7 @@ export default function FolderChips(props: IFolderChips) {
           onSubmit={(e) => {
             e.preventDefault();
             const input = e.currentTarget.elements.namedItem("name") as HTMLInputElement;
-            const name = input.value
-              .toLowerCase()
-              .replace(/[^a-z0-9_-]+/g, "-")
-              .replace(/^-+|-+$/g, "");
+            const name = normalizeFolderName(input.value);
             if (name) onConfirmDraft(name);
             else onCancelDraft();
           }}

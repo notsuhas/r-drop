@@ -1,4 +1,5 @@
 import { Check, Copy, Info } from "lucide-react";
+import OverlayIconButton from "@/components/ui/OverlayIconButton";
 import type { IObject } from "@/lib/api";
 import { basename, extension, fmtSize } from "@/lib/format";
 import FilePreview from "./FilePreview";
@@ -41,25 +42,19 @@ export default function FileCard(props: IFileCard) {
       >
         {selected && <Check size={12} strokeWidth={3} />}
       </div>
-      <button
-        type="button"
-        onClick={onInspect}
-        title="Details"
-        className="absolute bottom-12 right-2 rounded-none border border-line bg-bg/90 px-2 py-1 font-mono text-[10px] text-muted opacity-0 backdrop-blur transition-opacity hover:text-ink group-hover:opacity-100"
-      >
+      <OverlayIconButton title="Details" position="bottom-right" onClick={onInspect}>
         <Info size={12} />
-      </button>
-      <button
-        type="button"
+      </OverlayIconButton>
+      <OverlayIconButton
+        title="Copy public URL"
+        position="top-right"
         onClick={() => {
           navigator.clipboard.writeText(object.url);
           onCopied();
         }}
-        title="Copy public URL"
-        className="absolute right-2 top-2 rounded-none border border-line bg-bg/90 px-2 py-1 font-mono text-[10px] text-muted opacity-0 backdrop-blur transition-opacity hover:text-ink group-hover:opacity-100"
       >
         <Copy size={12} />
-      </button>
+      </OverlayIconButton>
     </div>
   );
 }

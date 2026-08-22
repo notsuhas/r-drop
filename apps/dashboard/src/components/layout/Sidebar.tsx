@@ -1,6 +1,6 @@
-import { LogOut } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import BrandMark from "@/components/auth/BrandMark";
+import UserChip from "@/components/layout/UserChip";
 
 interface ISidebarUser {
   name?: string;
@@ -42,32 +42,7 @@ export default function Sidebar(props: ISidebar) {
         ))}
       </nav>
       <div className="mt-auto border-t border-line p-4">
-        <div className="flex items-center gap-2.5">
-          {user.picture && (
-            <img
-              src={user.picture}
-              alt=""
-              className="h-7 w-7 rounded-none"
-              referrerPolicy="no-referrer"
-            />
-          )}
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-medium">{user.name ?? user.email}</p>
-            <button
-              type="button"
-              onClick={async () => {
-                const res = await fetch("/api/auth/logout", { method: "POST" });
-                const body = (await res.json().catch(() => null)) as { logoutUrl?: string } | null;
-                window.location.href = body?.logoutUrl ?? "/";
-              }}
-              className="text-xs text-muted hover:text-ink"
-            >
-              <span className="inline-flex items-center gap-1">
-                <LogOut size={11} /> Sign out
-              </span>
-            </button>
-          </div>
-        </div>
+        <UserChip name={user.name} email={user.email} picture={user.picture} />
       </div>
     </aside>
   );

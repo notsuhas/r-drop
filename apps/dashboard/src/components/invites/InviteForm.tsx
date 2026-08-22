@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import Notice from "@/components/ui/Notice";
 
 interface IInviteForm {
   onInvite: (email: string) => void;
@@ -35,7 +36,11 @@ export default function InviteForm(props: IInviteForm) {
           Invite
         </Button>
       </form>
-      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
+      {error && (
+        <div className="mt-2 max-w-md">
+          <Notice>{error}</Notice>
+        </div>
+      )}
     </div>
   );
 }

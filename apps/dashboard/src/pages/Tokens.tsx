@@ -1,30 +1,26 @@
+// API tokens: pure composition — agent setup, manual create, list.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import AgentSetupCard from "@/components/tokens/AgentSetupCard";
+import CreateTokenForm from "@/components/tokens/CreateTokenForm";
+import FreshTokenPanel from "@/components/tokens/FreshTokenPanel";
 import TokenRow from "@/components/tokens/TokenRow";
-import Button from "@/components/ui/Button";
-import CopyField from "@/components/ui/CopyField";
 import Empty from "@/components/ui/Empty";
-import Input from "@/components/ui/Input";
 import { api } from "@/lib/api";
 
 export default function Tokens() {
-  const [name, setName] = useState("");
   const [fresh, setFresh] = useState<string | null>(null);
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({ queryKey: ["tokens"], queryFn: api.tokens });
   const invalidate = () => qc.invalidateQueries({ queryKey: ["tokens"] });
 
   const create = useMutation({
-    mutationFn: (n: string) => api.createToken(n, "write"),
-    onSuccess: (res) => {
-      setFresh(res.token);
-      setName("");
-    },
+    mutationFn: (name: string) => api.createToken(name, "write"),
+    onSuccess: (res) => setFresh(res.token),
     onSettled: invalidate,
   });
   const rename = useMutation({
-    mutationFn: ({ id, name: n }: { id: string; name: string }) => api.renameToken(id, n),
+    mutationFn: (input: { id: string; name: string }) => api.renameToken(input.id, input.name),
     onSettled: invalidate,
   });
   const remove = useMutation({ mutationFn: api.deleteToken, onSettled: invalidate });
@@ -40,34 +36,17 @@ export default function Tokens() {
         <AgentSetupCard />
       </div>
 
-      <form
-        className="mt-6 flex max-w-md gap-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (name.trim()) create.mutate(name.trim());
-        }}
-      >
-        <Input
-          value={name}
-          onChange={setName}
-          placeholder="token name, e.g. ci"
-          className="flex-1"
+      <div className="mt-6">
+        <CreateTokenForm
+          onCreate={(name) => create.mutate(name)}
+          pending={create.isPending}
+          error={create.isError ? create.error.message : undefined}
         />
-        <Button variant="primary" type="submit" disabled={create.isPending}>
-          Create token
-        </Button>
-      </form>
-      {create.isError && <p className="mt-2 text-sm text-danger">{create.error.message}</p>}
+      </div>
 
       {fresh && (
-        <div className="mt-4 max-w-2xl border-2 border-line bg-panel p-4">
-          <p className="text-sm font-medium">Copy this now — it won't be shown again.</p>
-          <div className="mt-2">
-            <CopyField value={fresh} label="Copy token" />
-          </div>
-          <div className="mt-2 text-right">
-            <Button onClick={() => setFresh(null)}>Done</Button>
-          </div>
+        <div className="mt-4">
+          <FreshTokenPanel token={fresh} onDone={() => setFresh(null)} />
         </div>
       )}
 
@@ -83,7 +62,7 @@ export default function Tokens() {
             <TokenRow
               key={t.id}
               token={t}
-              onRename={(n) => rename.mutate({ id: t.id, name: n })}
+              onRename={(name) => rename.mutate({ id: t.id, name })}
               onDelete={() => remove.mutate(t.id)}
             />
           ))}

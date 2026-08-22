@@ -85,7 +85,6 @@ export default function Files() {
           object={b.inspected}
           folders={b.rootFolders}
           onClose={() => b.setInspected(null)}
-          onCopied={b.flashCopied}
           onDelete={() => b.remove.mutate([b.inspected?.key ?? ""])}
           onRename={(newKey) => b.rename.mutate({ key: b.inspected?.key ?? "", newKey })}
         />

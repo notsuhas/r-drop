@@ -3,6 +3,10 @@ import { basename, camelCase } from "./format";
 
 export type CopyFormat = "newline" | "json" | "ts" | "manifest";
 
+/** Folder part of an object key ("a/b/c.png" -> "a/b"), or "" at the root. */
+export const folderOf = (key: string) =>
+  key.includes("/") ? key.slice(0, key.lastIndexOf("/")) : "";
+
 export const COPY_FORMATS: { id: CopyFormat; label: string }[] = [
   { id: "newline", label: "urls" },
   { id: "json", label: "json" },

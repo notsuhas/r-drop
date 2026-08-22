@@ -43,4 +43,8 @@ export const api = {
   renameToken: (id: string, name: string) =>
     client.api.tokens[":id"].$patch({ param: { id }, json: { name } }).then(unwrap),
   deleteToken: (id: string) => client.api.tokens[":id"].$delete({ param: { id } }).then(unwrap),
+  logout: () =>
+    client.api.auth.logout
+      .$post()
+      .then(unwrap<InferResponseType<typeof client.api.auth.logout.$post, 200>>),
 };

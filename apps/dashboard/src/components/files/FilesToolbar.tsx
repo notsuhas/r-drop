@@ -1,6 +1,7 @@
-import { LayoutGrid, List } from "lucide-react";
 import { useRef } from "react";
+import ViewToggle from "@/components/files/ViewToggle";
 import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
 
 interface IFilesToolbar {
   folder: string;
@@ -60,31 +61,12 @@ export default function FilesToolbar(props: IFilesToolbar) {
         {hasFiles && (
           <Button onClick={onSelectAll}>{allSelected ? "Clear selection" : "Select all"}</Button>
         )}
-        <div className="flex border border-line">
-          {(
-            [
-              ["grid", LayoutGrid],
-              ["list", List],
-            ] as const
-          ).map(([mode, Icon]) => (
-            <button
-              key={mode}
-              type="button"
-              onClick={() => onView(mode)}
-              aria-label={`${mode} view`}
-              className={`px-2.5 py-1.5 transition-colors ${
-                view === mode ? "bg-panel-2 text-honey" : "text-muted hover:text-ink"
-              }`}
-            >
-              <Icon size={15} />
-            </button>
-          ))}
-        </div>
-        <input
+        <ViewToggle view={view} onView={onView} />
+        <Input
           value={filter}
-          onChange={(e) => onFilter(e.target.value)}
+          onChange={onFilter}
           placeholder="filter…"
-          className="w-36 border border-line bg-panel px-3 py-1.5 font-mono text-sm transition-[width] placeholder:text-muted focus:w-52"
+          className="w-36 transition-[width] focus:w-52"
         />
         <Button onClick={onNewFolder}>New folder</Button>
         <Button variant="primary" onClick={() => fileInput.current?.click()}>

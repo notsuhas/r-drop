@@ -7,3 +7,5 @@ dist
 .playwright-mcp/
 .fallow
 /wrangler.jsonc
+.claude/skills/
+skills-lock.json

@@ -1,30 +1,45 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Sparkles } from "lucide-react";
+import { useState } from "react";
+import AgentSetupDialog from "@/components/tokens/AgentSetupDialog";
 import Button from "@/components/ui/Button";
 import Notice from "@/components/ui/Notice";
-import { useToast } from "@/hooks/useToast";
 import { buildAgentSetupPrompt } from "@/lib/agent-content";
 import { api } from "@/lib/api";
 import { getConfig } from "@/lib/config";
 
+interface ISetupResult {
+  tokenName: string;
+  prompt: string;
+  copied: boolean;
+}
+
 export default function AgentSetupCard() {
   const qc = useQueryClient();
-  const { toast } = useToast();
+  // A toast was the wrong surface here: the copy is only half the job, and the
+  // half that matters — paste this into an agent — needs to be read, not
+  // glimpsed. The dialog also keeps the prompt recoverable if the copy failed.
+  const [result, setResult] = useState<ISetupResult | null>(null);
 
   const setup = useMutation({
-    mutationFn: async () => {
-      const name = `agent-${new Date().toISOString().slice(0, 10)}`;
-      const { token } = await api.createToken(name, "write");
+    mutationFn: async (): Promise<ISetupResult> => {
+      const tokenName = `agent-${new Date().toISOString().slice(0, 10)}`;
+      const { token } = await api.createToken(tokenName, "write");
       const { publicBase } = await getConfig();
       const prompt = buildAgentSetupPrompt({
         publicBase,
         appBase: window.location.origin,
         token,
       });
-      await navigator.clipboard.writeText(prompt);
-      return name;
+      // The token exists either way, so a blocked clipboard must not read as a
+      // failed setup — fall through and let the dialog show the text.
+      const copied = await navigator.clipboard
+        .writeText(prompt)
+        .then(() => true)
+        .catch(() => false);
+      return { tokenName, prompt, copied };
     },
-    onSuccess: (name) => toast(`Prompt copied. Token "${name}" is in the list below.`, "ok"),
+    onSuccess: setResult,
     onSettled: () => qc.invalidateQueries({ queryKey: ["tokens"] }),
   });
 
@@ -51,6 +66,7 @@ export default function AgentSetupCard() {
           <Notice>{setup.error.message}</Notice>
         </div>
       )}
+      {result && <AgentSetupDialog {...result} onClose={() => setResult(null)} />}
     </div>
   );
 }

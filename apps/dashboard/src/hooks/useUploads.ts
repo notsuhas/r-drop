@@ -20,8 +20,11 @@ export function useUploads(onUploaded: () => void) {
   const queue = useRef<{ id: string; file: File; folder: string }[]>([]);
   const controllers = useRef(new Map<string, AbortController>());
 
-  const patch = (id: string, changes: Partial<IUploadItem>) =>
-    setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...changes } : it)));
+  const patch = useCallback(
+    (id: string, changes: Partial<IUploadItem>) =>
+      setItems((prev) => prev.map((it) => (it.id === id ? { ...it, ...changes } : it))),
+    [],
+  );
 
   const drain = useCallback(async () => {
     if (busy.current) return;
@@ -59,7 +62,7 @@ export function useUploads(onUploaded: () => void) {
       job = queue.current.shift();
     }
     busy.current = false;
-  }, [onUploaded]);
+  }, [onUploaded, patch]);
 
   const enqueue = useCallback(
     (entries: { file: File; folder: string }[]) => {
@@ -80,20 +83,23 @@ export function useUploads(onUploaded: () => void) {
     [drain],
   );
 
-  const cancel = useCallback((id: string) => {
-    const queuedIndex = queue.current.findIndex((j) => j.id === id);
-    if (queuedIndex >= 0) {
-      queue.current.splice(queuedIndex, 1);
-      patch(id, { status: "cancelled" });
-      return;
-    }
-    controllers.current.get(id)?.abort();
-  }, []);
+  const cancel = useCallback(
+    (id: string) => {
+      const queuedIndex = queue.current.findIndex((j) => j.id === id);
+      if (queuedIndex >= 0) {
+        queue.current.splice(queuedIndex, 1);
+        patch(id, { status: "cancelled" });
+        return;
+      }
+      controllers.current.get(id)?.abort();
+    },
+    [patch],
+  );
 
   const cancelAll = useCallback(() => {
     for (const job of queue.current.splice(0)) patch(job.id, { status: "cancelled" });
     for (const controller of controllers.current.values()) controller.abort();
-  }, []);
+  }, [patch]);
 
   const dismiss = useCallback(
     () => setItems((prev) => prev.filter((it) => !SETTLED.includes(it.status))),

@@ -1,5 +1,7 @@
 import { Check, X } from "lucide-react";
+import IconButton from "@/components/ui/IconButton";
 import type { IUploadItem } from "@/hooks/useUploads";
+import { cx } from "@/lib/cx";
 import { fmtSize } from "@/lib/format";
 
 interface IUploadTrayItem {
@@ -7,46 +9,54 @@ interface IUploadTrayItem {
   onCancel: () => void;
 }
 
-function StatusLabel(props: { item: IUploadItem }) {
+const CANCELLABLE = new Set(["queued", "reading", "uploading"]);
+
+function Status(props: { item: IUploadItem }) {
   const { item } = props;
   if (item.status === "done") return <Check size={13} className="text-ok" />;
-  if (item.status === "error") return <span className="text-danger">failed</span>;
-  if (item.status === "cancelled") return <span className="text-muted">cancelled</span>;
-  if (item.status === "uploading") return <>{Math.round(item.progress * 100)}%</>;
-  return <>{fmtSize(item.size)}</>;
+  if (item.status === "error") return <span className="text-danger">Failed</span>;
+  if (item.status === "cancelled") return <span className="text-ink-3">Cancelled</span>;
+  if (item.status === "reading") return <span className="text-ink-3">Reading…</span>;
+  if (item.status === "uploading")
+    return <span className="tabular">{Math.round(item.progress * 100)}%</span>;
+  return <span>{fmtSize(item.size)}</span>;
 }
-
-const CANCELLABLE = new Set(["queued", "reading", "uploading"]);
 
 export default function UploadTrayItem(props: IUploadTrayItem) {
   const { item, onCancel } = props;
+  const settled = item.status === "done" || item.status === "cancelled";
+
   return (
-    <li className="border-b border-line px-4 py-2.5 last:border-b-0">
-      <div className="flex items-center justify-between gap-3">
-        <span className="truncate font-mono text-xs">{item.name}</span>
-        <span className="flex shrink-0 items-center gap-2 text-xs text-muted">
-          <StatusLabel item={item} />
+    <li className="border-b border-hairline px-3 py-2 last:border-b-0">
+      <div className="flex items-center justify-between gap-2">
+        <span className="min-w-0 truncate font-mono text-xs text-ink" title={item.name}>
+          {item.name}
+        </span>
+        <span className="flex shrink-0 items-center gap-1.5 font-mono text-2xs text-ink-2">
+          <Status item={item} />
           {CANCELLABLE.has(item.status) && (
-            <button
-              type="button"
-              onClick={onCancel}
-              aria-label={`Cancel ${item.name}`}
-              className="text-muted hover:text-danger"
-            >
-              <X size={13} />
-            </button>
+            <IconButton size="sm" variant="danger" label={`Cancel ${item.name}`} onClick={onCancel}>
+              <X size={12} />
+            </IconButton>
           )}
         </span>
       </div>
+
       {item.status === "error" ? (
-        <p className="mt-1 text-xs text-danger">{item.error}</p>
-      ) : item.status === "cancelled" ? null : (
-        <div className="mt-1.5 h-1 overflow-hidden bg-line">
-          <div
-            className={`h-full transition-[width] duration-150 ${item.status === "done" ? "bg-ok" : "bg-honey"}`}
-            style={{ width: `${Math.round(item.progress * 100)}%` }}
-          />
-        </div>
+        <p className="mt-1 text-2xs text-danger">{item.error}</p>
+      ) : (
+        !settled && (
+          <div className="mt-1.5 h-0.5 overflow-hidden rounded-full bg-surface-3">
+            <div
+              data-motion-safe="progress"
+              className={cx(
+                "h-full transition-[width] duration-(--duration-base) ease-(--ease-out-quart)",
+                "bg-honey",
+              )}
+              style={{ width: `${Math.round(item.progress * 100)}%` }}
+            />
+          </div>
+        )
       )}
     </li>
   );

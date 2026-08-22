@@ -7,12 +7,17 @@ export type CopyFormat = "newline" | "json" | "ts" | "manifest";
 export const folderOf = (key: string) =>
   key.includes("/") ? key.slice(0, key.lastIndexOf("/")) : "";
 
-export const COPY_FORMATS: { id: CopyFormat; label: string }[] = [
-  { id: "newline", label: "urls" },
-  { id: "json", label: "json" },
-  { id: "ts", label: "ts const" },
-  { id: "manifest", label: "manifest url" },
-];
+/** What a completed copy is called in a confirmation, e.g. "Copied 3 URLs". */
+export function describeCopy(format: CopyFormat, count: number) {
+  if (format === "manifest") return "Copied manifest URL";
+  if (format === "json") return `Copied JSON for ${count} ${count === 1 ? "file" : "files"}`;
+  if (format === "ts") return `Copied TypeScript for ${count} ${count === 1 ? "file" : "files"}`;
+  return `Copied ${count} ${count === 1 ? "URL" : "URLs"}`;
+}
+
+/** Label for the segment of a folder path below its parent. */
+export const folderLabel = (full: string, parent: string) =>
+  parent && full.startsWith(`${parent}/`) ? full.slice(parent.length + 1) : full;
 
 interface ILinkable {
   key: string;

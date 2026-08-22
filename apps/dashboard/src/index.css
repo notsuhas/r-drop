@@ -1,35 +1,283 @@
-@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
+/*
+  r-drop design tokens.
+
+  The neutral ramp carries ~0.005 chroma at the honey hue: enough that the grays
+  read as chosen rather than dead, not enough to read as sepia. Every ink token
+  clears 4.5:1 on every surface in the ramp; --border-strong clears the 3:1
+  non-text floor so it can carry a control's boundary on its own.
+
+  Surfaces are outlined OR raised, never both — a 1px border paired with a wide
+  drop shadow is the "ghost card" look. Inline surfaces get --color-hairline;
+  overlays get --shadow-e2..e4 and no border.
+*/
 @theme {
-  --color-bg: rgba(13, 15, 20, 1);
-  --color-panel: rgba(20, 23, 31, 1);
-  --color-panel-2: rgba(28, 32, 43, 1);
-  --color-line: rgba(255, 255, 255, 0.16);
-  --color-ink: rgba(233, 236, 243, 1);
-  --color-muted: rgba(150, 158, 175, 1);
-  --color-honey: rgba(255, 178, 86, 1);
-  --color-honey-ink: rgba(41, 29, 12, 1);
-  --color-danger: rgba(255, 110, 110, 1);
-  --color-ok: rgba(97, 214, 155, 1);
-  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  /* Surfaces, deepest to highest */
+  --color-bg: oklch(0.18 0.005 70);
+  --color-surface: oklch(0.222 0.005 70);
+  --color-surface-2: oklch(0.262 0.006 70);
+  --color-surface-3: oklch(0.312 0.006 70);
+
+  /* Lines. hairline = decorative divider; border = visible edge;
+     border-strong = load-bearing control boundary (>=3:1). */
+  --color-hairline: oklch(0.316 0.006 70);
+  --color-border: oklch(0.4 0.007 70);
+  --color-border-strong: oklch(0.54 0.008 70);
+
+  /* Ink, primary to tertiary */
+  --color-ink: oklch(0.96 0.003 70);
+  --color-ink-2: oklch(0.79 0.008 70);
+  --color-ink-3: oklch(0.68 0.01 70);
+
+  /* Brand + status */
+  --color-honey: oklch(0.8 0.155 72);
+  --color-honey-dim: oklch(0.7 0.13 72);
+  --color-honey-ink: oklch(0.235 0.055 60);
+  --color-danger: oklch(0.705 0.18 22);
+  --color-ok: oklch(0.8 0.14 155);
+
+  /* Tinted washes — selection, hover, status backgrounds */
+  --color-honey-wash: oklch(0.8 0.155 72 / 0.12);
+  --color-honey-wash-strong: oklch(0.8 0.155 72 / 0.2);
+  --color-danger-wash: oklch(0.705 0.18 22 / 0.12);
+  --color-ok-wash: oklch(0.8 0.14 155 / 0.12);
+
+  /* Type. Proportional grotesque for chrome, mono for data — every object key,
+     URL, byte count and timestamp is mono with tabular figures so columns line up. */
+  --font-sans: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Spline Sans Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1.45;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.5;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.55;
+  --text-base: 0.875rem;
+  --text-base--line-height: 1.6;
+  --text-md: 1rem;
+  --text-md--line-height: 1.55;
+  --text-lg: 1.125rem;
+  --text-lg--line-height: 1.45;
+  --text-xl: 1.375rem;
+  --text-xl--line-height: 1.3;
+  --text-2xl: 1.75rem;
+  --text-2xl--line-height: 1.2;
+  --text-3xl: 2.25rem;
+  --text-3xl--line-height: 1.1;
+
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  /* Elevation. Overlays only; never combined with a border. */
+  --shadow-e1: 0 1px 2px oklch(0 0 0 / 0.4);
+  --shadow-e2: 0 4px 12px -2px oklch(0 0 0 / 0.5);
+  --shadow-e3: 0 12px 32px -8px oklch(0 0 0 / 0.6), 0 2px 8px -2px oklch(0 0 0 / 0.4);
+  --shadow-e4: 0 24px 64px -12px oklch(0 0 0 / 0.7), 0 4px 12px -4px oklch(0 0 0 / 0.45);
+
+  /* Motion. Exponential ease-out only — no bounce, no elastic. */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --duration-slow: 260ms;
+  --duration-slower: 420ms;
+}
+
+/* Semantic stacking order. Nothing in the app uses a bare z-index. */
+@theme {
+  --z-index-dropdown: 100;
+  --z-index-sticky: 200;
+  --z-index-drawer: 300;
+  --z-index-backdrop: 400;
+  --z-index-modal: 500;
+  --z-index-toast: 600;
+  --z-index-tooltip: 700;
 }
 
 @layer base {
+  html {
+    color-scheme: dark;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Data is mono and tabular everywhere it appears. */
+  code,
+  kbd,
+  samp,
+  pre,
+  .font-mono {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "ss01" on;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
   ::selection {
-    background: rgba(255, 178, 86, 0.3);
+    background: var(--color-honey-wash-strong);
   }
+
   :focus-visible {
-    outline: 2px solid rgba(255, 178, 86, 1);
+    outline: 2px solid var(--color-honey);
     outline-offset: 2px;
+    border-radius: var(--radius-xs);
   }
-  @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-      animation: none !important;
-      transition: none !important;
-    }
+
+  /* Mouse users never see the ring; keyboard users always do. */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* Scrollbars belong to the surface, not to the OS. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-surface-3) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-surface-3);
+    border: 3px solid transparent;
+    border-radius: 9999px;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-border);
+    background-clip: content-box;
+  }
+}
+
+@layer utilities {
+  /* Checkerboard behind transparent assets so alpha reads against something. */
+  .bg-checker {
+    background-image: conic-gradient(
+      oklch(1 0 0 / 0.04) 90deg,
+      transparent 90deg 180deg,
+      oklch(1 0 0 / 0.04) 180deg 270deg,
+      transparent 270deg
+    );
+    background-size: 16px 16px;
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Entrances. Each is scoped to what it reveals rather than applied uniformly. */
+@keyframes rd-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes rd-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@keyframes rd-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(4px);
+  }
+}
+@keyframes rd-slide-from-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+@keyframes rd-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+}
+@keyframes rd-shimmer {
+  to {
+    background-position: 200% 0;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: rd-fade-in var(--duration-base) var(--ease-out-quart) both;
+  }
+  .animate-rise {
+    animation: rd-rise var(--duration-slow) var(--ease-out-quart) both;
+  }
+  .animate-pop {
+    animation: rd-pop var(--duration-base) var(--ease-out-expo) both;
+  }
+  .animate-slide-in {
+    animation: rd-slide-from-right var(--duration-slow) var(--ease-out-expo) both;
+  }
+  .animate-toast-in {
+    animation: rd-toast-in var(--duration-slow) var(--ease-out-expo) both;
+  }
+
+  /* Loading placeholders sweep rather than pulse — a pulse on a grid of tiles
+     reads as a fault light. */
+  .shimmer {
+    background: linear-gradient(
+      100deg,
+      var(--color-surface) 30%,
+      var(--color-surface-2) 50%,
+      var(--color-surface) 70%
+    );
+    background-size: 200% 100%;
+    animation: rd-shimmer 1.4s linear infinite;
+  }
+}
+
+/*
+  Reduced motion: entrances collapse to instant and looping effects stop, but
+  determinate progress (upload bars) keeps its width transition — that motion
+  is information, not decoration.
+*/
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .shimmer {
+    animation: none !important;
+    background: var(--color-surface-2);
+  }
+
+  [data-motion-safe="progress"] {
+    transition-duration: var(--duration-fast) !important;
   }
 }

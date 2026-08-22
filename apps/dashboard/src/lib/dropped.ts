@@ -34,3 +34,14 @@ export async function collectDropped(dt: DataTransfer): Promise<IDroppedFile[]> 
   for (const entry of entries) await walk(entry, "");
   return out;
 }
+
+/**
+ * Directory a picked file sat in, for <input webkitdirectory> selections.
+ * "logos/dark/mark.svg" -> "logos/dark". Plain file pickers report "", so the
+ * file lands directly in the upload target.
+ */
+export function relativeDirOf(file: File) {
+  const path = (file as File & { webkitRelativePath?: string }).webkitRelativePath ?? "";
+  if (!path.includes("/")) return "";
+  return path.slice(0, path.lastIndexOf("/"));
+}

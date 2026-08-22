@@ -1,27 +1,24 @@
-// Clipboard copy for the selection pill, with a transient "copied" flash.
-import { useCallback, useState } from "react";
+// Clipboard copy for the selection, in each of the formats agents consume.
+import { useCallback } from "react";
 import type { IObject } from "@/lib/api";
 import { getConfig } from "@/lib/config";
 import { type CopyFormat, formatLinks } from "@/lib/links";
 
+export interface ICopyResult {
+  format: CopyFormat;
+  count: number;
+}
+
 export function useCopyLinks(getObjects: () => IObject[], getFolder: () => string) {
-  const [copied, setCopied] = useState(false);
-
-  const flashCopied = useCallback(() => {
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  }, []);
-
   const copy = useCallback(
-    async (format: CopyFormat) => {
+    async (format: CopyFormat): Promise<ICopyResult> => {
+      const objects = getObjects();
       const { publicBase } = await getConfig();
-      await navigator.clipboard.writeText(
-        formatLinks(getObjects(), format, getFolder(), publicBase),
-      );
-      flashCopied();
+      await navigator.clipboard.writeText(formatLinks(objects, format, getFolder(), publicBase));
+      return { format, count: objects.length };
     },
-    [getObjects, getFolder, flashCopied],
+    [getObjects, getFolder],
   );
 
-  return { copied, flashCopied, copy };
+  return { copy };
 }

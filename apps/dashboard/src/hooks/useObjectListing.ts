@@ -2,7 +2,7 @@
 // sorted and filtered into the visible set.
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
-import type { SortKey } from "@/components/files/ListView";
+import type { SortKey } from "@/hooks/useViewPrefs";
 import { api, type IObject } from "@/lib/api";
 import { basename } from "@/lib/format";
 

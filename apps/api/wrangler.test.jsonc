@@ -8,7 +8,10 @@
   "vars": {
     "PUBLIC_BASE": "https://cdn.test",
     "APP_BASE": "https://app.test",
-    "ADMIN_EMAILS": "admin@test.dev"
+    "ADMIN_EMAILS": "admin@test.dev",
+    "WORKOS_API_KEY": "sk_test_dummy",
+    "WORKOS_CLIENT_ID": "client_test_dummy",
+    "WORKOS_COOKIE_PASSWORD": "0000000000000000000000000000000000000000000000000000000000000000"
   },
   "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "test-bucket" }],
   "d1_databases": [

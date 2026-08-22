@@ -32,6 +32,13 @@ describe("resolveUpload", () => {
     expect(resolveUpload(form({ file: big }))).toMatchObject({ ok: false, status: 413 });
   });
 
+  test("html content types rejected", () => {
+    const html = new File(["<script>"], "page.html", { type: "text/html" });
+    expect(resolveUpload(form({ file: html }))).toMatchObject({ ok: false, status: 400 });
+    const xhtml = new File(["x"], "p.xhtml", { type: "application/xhtml+xml; charset=utf-8" });
+    expect(resolveUpload(form({ file: xhtml }))).toMatchObject({ ok: false, status: 400 });
+  });
+
   test("reserved folder rejected", () =>
     expect(
       resolveUpload(form({ folder: "_manifest", file: new File(["x"], "a.png") })),

@@ -55,8 +55,10 @@ export default function Sidebar(props: ISidebar) {
             <p className="truncate text-xs font-medium">{user.name ?? user.email}</p>
             <button
               type="button"
-              onClick={() => {
-                window.location.href = "/api/auth/logout";
+              onClick={async () => {
+                const res = await fetch("/api/auth/logout", { method: "POST" });
+                const body = (await res.json().catch(() => null)) as { logoutUrl?: string } | null;
+                window.location.href = body?.logoutUrl ?? "/";
               }}
               className="text-xs text-muted hover:text-ink"
             >

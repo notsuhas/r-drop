@@ -2,25 +2,42 @@
 import { and, eq, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
+import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import * as schema from "@/db/schema";
 import { isAdminEmail } from "@/lib/admin";
 import { clearSessionCookie, getSessionUser, setSessionCookie } from "@/lib/session";
 import { getWorkos } from "@/lib/workos";
 import type { Env } from "@/types";
 
+// Short-lived CSRF state for the OAuth round-trip; scoped to the auth routes.
+const STATE_COOKIE = "rdrop_oauth_state";
+
 export const auth = new Hono<Env>()
   .get("/auth/login", (c) => {
+    const state = crypto.randomUUID();
+    setCookie(c, STATE_COOKIE, state, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "Lax",
+      path: "/api/auth",
+      maxAge: 600,
+    });
     const url = getWorkos(c.env).userManagement.getAuthorizationUrl({
       provider: "GoogleOAuth",
       clientId: c.env.WORKOS_CLIENT_ID,
       redirectUri: `${c.env.APP_BASE}/api/auth/callback`,
+      state,
     });
     return c.redirect(url);
   })
 
   .get("/auth/callback", async (c) => {
     const code = c.req.query("code");
-    if (!code) return c.redirect("/?error=auth_failed");
+    const state = c.req.query("state");
+    const expectedState = getCookie(c, STATE_COOKIE);
+    deleteCookie(c, STATE_COOKIE, { path: "/api/auth" });
+    if (!code || !state || !expectedState || state !== expectedState)
+      return c.redirect("/?error=auth_failed");
 
     const workos = getWorkos(c.env);
     let result: Awaited<ReturnType<typeof workos.userManagement.authenticateWithCode>>;
@@ -59,19 +76,19 @@ export const auth = new Hono<Env>()
     return c.redirect("/");
   })
 
-  .get("/auth/logout", async (c) => {
+  .post("/auth/logout", async (c) => {
     const session = await getSessionUser(c);
     clearSessionCookie(c);
+    let logoutUrl: string | null = null;
     if (session) {
       try {
-        const logoutUrl = getWorkos(c.env).userManagement.getLogoutUrl({
+        logoutUrl = getWorkos(c.env).userManagement.getLogoutUrl({
           sessionId: session.sessionId,
           returnTo: c.env.APP_BASE,
         });
-        return c.redirect(logoutUrl);
       } catch (err) {
         console.error("getLogoutUrl failed:", err);
       }
     }
-    return c.redirect("/");
+    return c.json({ logoutUrl });
   });

@@ -256,9 +256,55 @@ describe("objects", () => {
   });
 });
 
-describe("auth routes without workos configured", () => {
-  it("503s clearly", async () => {
-    const res = await SELF.fetch(`${APP}/api/auth/login`);
-    expect(res.status).toBe(503);
+describe("oauth flow", () => {
+  it("login redirects to workos with a state parameter and sets the state cookie", async () => {
+    const res = await SELF.fetch(`${APP}/api/auth/login`, { redirect: "manual" });
+    expect(res.status).toBe(302);
+    const location = new URL(res.headers.get("location") ?? "");
+    const state = location.searchParams.get("state");
+    expect(state).toBeTruthy();
+    expect(location.searchParams.get("provider")).toBe("GoogleOAuth");
+    const cookie = res.headers.get("set-cookie") ?? "";
+    expect(cookie).toContain(`rdrop_oauth_state=${state}`);
+    expect(cookie).toContain("HttpOnly");
+  });
+
+  it("callback rejects a state mismatch without exchanging the code", async () => {
+    const res = await SELF.fetch(`${APP}/api/auth/callback?code=x&state=forged`, {
+      redirect: "manual",
+      headers: { cookie: "rdrop_oauth_state=legit" },
+    });
+    expect(res.status).toBe(302);
+    expect(res.headers.get("location")).toBe("/?error=auth_failed");
+  });
+
+  it("callback rejects a missing state cookie", async () => {
+    const res = await SELF.fetch(`${APP}/api/auth/callback?code=x&state=anything`, {
+      redirect: "manual",
+    });
+    expect(res.headers.get("location")).toBe("/?error=auth_failed");
+  });
+
+  it("logout is POST-only and clears the session cookie", async () => {
+    const get = await SELF.fetch(`${APP}/api/auth/logout`);
+    expect(get.status).toBe(404);
+    const post = await SELF.fetch(`${APP}/api/auth/logout`, { method: "POST" });
+    expect(post.status).toBe(200);
+    expect((await post.json()) as object).toEqual({ logoutUrl: null });
+    expect(post.headers.get("set-cookie")).toContain("rdrop_session=;");
+  });
+});
+
+describe("upload content-type guard", () => {
+  it("rejects html uploads", async () => {
+    const form = new FormData();
+    form.set("folder", "scratch");
+    form.set("file", new File(["<script>alert(1)</script>"], "page.html", { type: "text/html" }));
+    const res = await SELF.fetch(`${APP}/api/upload`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${WRITE_TOKEN}` },
+      body: form,
+    });
+    expect(res.status).toBe(400);
   });
 });

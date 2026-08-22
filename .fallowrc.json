@@ -1,0 +1,9 @@
+{
+  // Test suites are entry points (bun test), not dead files.
+  "entry": ["**/__tests__/**/*.test.ts"],
+  "health": {
+    // No coverage data is fed to fallow, so CRAP scores are estimates; the
+    // real complexity gates are maxCyclomatic/maxCognitive defaults.
+    "maxCrap": 100
+  }
+}

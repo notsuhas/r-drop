@@ -81,5 +81,3 @@ export const api = {
     }),
   deleteToken: (id: string) => req<{ deleted: string }>(`/api/tokens/${id}`, { method: "DELETE" }),
 };
-
-export const PUBLIC_BASE = "https://ho-drops.theclau.de";

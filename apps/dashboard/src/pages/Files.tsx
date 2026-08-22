@@ -137,7 +137,7 @@ export default function Files() {
 
           {marquee.rect && (
             <div
-              className="pointer-events-none fixed z-(--z-index-dropdown) rounded-xs border border-honey bg-honey-wash"
+              className="pointer-events-none fixed z-(--z-index-sticky) rounded-xs border border-accent bg-accent-wash"
               style={marquee.rect}
             />
           )}

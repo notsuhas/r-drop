@@ -3,48 +3,57 @@
 /*
   r-drop design tokens.
 
-  The neutral ramp carries ~0.005 chroma at the honey hue: enough that the grays
-  read as chosen rather than dead, not enough to read as sepia. Every ink token
-  clears 4.5:1 on every surface in the ramp; --border-strong clears the 3:1
-  non-text floor so it can carry a control's boundary on its own.
+  The neutral ramp carries a whisper of the brand hue: enough that the grays
+  read as chosen rather than dead, not enough to tint. Every ink token clears
+  4.5:1 on every surface in the ramp; --border-strong clears the 3:1 non-text
+  floor so it can carry a control's boundary on its own.
 
   Surfaces are outlined OR raised, never both — a 1px border paired with a wide
   drop shadow is the "ghost card" look. Inline surfaces get --color-hairline;
   overlays get --shadow-e2..e4 and no border.
 */
 @theme {
-  /* Surfaces, deepest to highest */
-  --color-bg: oklch(0.18 0.005 70);
-  --color-surface: oklch(0.222 0.005 70);
-  --color-surface-2: oklch(0.262 0.006 70);
-  --color-surface-3: oklch(0.312 0.006 70);
+  /* Surfaces, deepest to highest. A near-neutral ramp carrying ~0.004 chroma at
+     the brand hue: enough that the grays read as chosen, not enough to tint. */
+  --color-bg: oklch(0.165 0.004 264);
+  --color-surface: oklch(0.205 0.004 264);
+  --color-surface-2: oklch(0.245 0.005 264);
+  --color-surface-3: oklch(0.295 0.005 264);
+  /* Floating menus sit between bg and surface-2 so they read as dark panes
+     over the page rather than light slabs. */
+  --color-popover: oklch(0.225 0.005 264);
 
-  /* Lines. hairline = decorative divider; border = visible edge;
-     border-strong = load-bearing control boundary (>=3:1). */
-  --color-hairline: oklch(0.316 0.006 70);
-  --color-border: oklch(0.4 0.007 70);
-  --color-border-strong: oklch(0.54 0.008 70);
+  /* Lines. hairline = divider; border = visible edge; border-strong = a
+     control boundary carrying its own >=3:1 contrast. */
+  --color-hairline: oklch(0.295 0.005 264);
+  --color-border: oklch(0.375 0.006 264);
+  --color-border-strong: oklch(0.54 0.006 264);
 
-  /* Ink, primary to tertiary */
-  --color-ink: oklch(0.96 0.003 70);
-  --color-ink-2: oklch(0.79 0.008 70);
-  --color-ink-3: oklch(0.68 0.01 70);
+  /* Ink, primary to tertiary. Every step clears 4.5:1 on every surface above. */
+  --color-ink: oklch(0.965 0.002 264);
+  --color-ink-2: oklch(0.795 0.006 264);
+  --color-ink-3: oklch(0.685 0.008 264);
 
-  /* Brand + status */
-  --color-honey: oklch(0.8 0.155 72);
-  --color-honey-dim: oklch(0.7 0.13 72);
-  --color-honey-ink: oklch(0.235 0.055 60);
-  --color-danger: oklch(0.705 0.18 22);
-  --color-ok: oklch(0.8 0.14 155);
+  /* Dropbox blue. --accent is the fill (white on it is 5.06:1); --accent-text
+     is the lighter tint used when the blue has to be legible *as* text on a
+     dark surface, where the fill blue would only reach 3.7:1. Hover darkens
+     rather than lightens, which keeps white text above 4.5:1. */
+  --color-accent: oklch(0.5542 0.2465 261.44);
+  --color-accent-hover: oklch(0.5 0.2465 261.44);
+  --color-accent-ink: oklch(1 0 0);
+  --color-accent-text: oklch(0.74 0.155 258);
+
+  --color-danger: oklch(0.7 0.175 25);
+  --color-ok: oklch(0.78 0.14 158);
 
   /* Tinted washes — selection, hover, status backgrounds */
-  --color-honey-wash: oklch(0.8 0.155 72 / 0.12);
-  --color-honey-wash-strong: oklch(0.8 0.155 72 / 0.2);
-  --color-danger-wash: oklch(0.705 0.18 22 / 0.12);
-  --color-ok-wash: oklch(0.8 0.14 155 / 0.12);
+  --color-accent-wash: oklch(0.5542 0.2465 261.44 / 0.18);
+  --color-accent-wash-strong: oklch(0.5542 0.2465 261.44 / 0.3);
+  --color-danger-wash: oklch(0.7 0.175 25 / 0.12);
+  --color-ok-wash: oklch(0.78 0.14 158 / 0.12);
 
   /* Type. Proportional grotesque for chrome, mono for data — every object key,
-     URL, byte count and timestamp is mono with tabular figures so columns line up. */
+     URL, byte count and timestamp is mono with tabular figures so columns align. */
   --font-sans: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "Spline Sans Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
@@ -73,11 +82,11 @@
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
 
-  /* Elevation. Overlays only; never combined with a border. */
-  --shadow-e1: 0 1px 2px oklch(0 0 0 / 0.4);
-  --shadow-e2: 0 4px 12px -2px oklch(0 0 0 / 0.5);
-  --shadow-e3: 0 12px 32px -8px oklch(0 0 0 / 0.6), 0 2px 8px -2px oklch(0 0 0 / 0.4);
-  --shadow-e4: 0 24px 64px -12px oklch(0 0 0 / 0.7), 0 4px 12px -4px oklch(0 0 0 / 0.45);
+  /* Elevation. Overlays only; inline surfaces use a hairline instead. */
+  --shadow-e1: 0 1px 2px oklch(0 0 0 / 0.5);
+  --shadow-e2: 0 4px 12px -2px oklch(0 0 0 / 0.6);
+  --shadow-e3: 0 12px 32px -8px oklch(0 0 0 / 0.7), 0 2px 8px -2px oklch(0 0 0 / 0.5);
+  --shadow-e4: 0 24px 64px -12px oklch(0 0 0 / 0.8), 0 4px 12px -4px oklch(0 0 0 / 0.55);
 
   /* Motion. Exponential ease-out only — no bounce, no elastic. */
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
@@ -88,13 +97,17 @@
   --duration-slower: 420ms;
 }
 
-/* Semantic stacking order. Nothing in the app uses a bare z-index. */
+/*
+  Semantic stacking order. Nothing in the app uses a bare z-index.
+  Popovers deliberately outrank sticky/drawer/modal: a menu is always launched
+  *from* one of those surfaces and must paint above it.
+*/
 @theme {
-  --z-index-dropdown: 100;
-  --z-index-sticky: 200;
-  --z-index-drawer: 300;
-  --z-index-backdrop: 400;
-  --z-index-modal: 500;
+  --z-index-sticky: 100;
+  --z-index-drawer: 200;
+  --z-index-backdrop: 300;
+  --z-index-modal: 400;
+  --z-index-popover: 500;
   --z-index-toast: 600;
   --z-index-tooltip: 700;
 }
@@ -136,11 +149,11 @@
   }
 
   ::selection {
-    background: var(--color-honey-wash-strong);
+    background: var(--color-accent-wash-strong);
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-honey);
+    outline: 2px solid var(--color-accent);
     outline-offset: 2px;
     border-radius: var(--radius-xs);
   }

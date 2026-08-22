@@ -32,7 +32,7 @@ export default function FileTile(props: IFileTile) {
         "group relative overflow-hidden rounded-lg bg-surface",
         "transition-[box-shadow,background-color] duration-(--duration-fast) ease-(--ease-out-quart)",
         selected
-          ? "bg-honey-wash shadow-[inset_0_0_0_2px_var(--color-honey)]"
+          ? "bg-accent-wash shadow-[inset_0_0_0_2px_var(--color-accent)]"
           : "hover:bg-surface-2",
         focused && !selected && "shadow-[inset_0_0_0_2px_var(--color-border-strong)]",
       )}

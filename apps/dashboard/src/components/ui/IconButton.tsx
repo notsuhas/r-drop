@@ -51,7 +51,7 @@ const IconButton = forwardRef<HTMLButtonElement, IIconButton>(function IconButto
         "inline-flex shrink-0 items-center justify-center",
         "transition-colors duration-(--duration-fast) ease-(--ease-out-quart)",
         "disabled:pointer-events-none disabled:opacity-45",
-        active ? "bg-surface-3 text-honey" : variants[variant],
+        active ? "bg-surface-3 text-accent-text" : variants[variant],
         sizes[size],
         className,
       )}

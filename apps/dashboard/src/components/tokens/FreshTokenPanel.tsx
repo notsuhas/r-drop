@@ -12,7 +12,7 @@ export default function FreshTokenPanel(props: IFreshTokenPanel) {
   return (
     <div className="rounded-lg bg-surface-2 p-4">
       <p className="flex items-center gap-2 text-sm font-medium">
-        <KeyRound size={14} className="text-honey" />
+        <KeyRound size={14} className="text-accent-text" />
         Copy this token now — it isn't shown again
       </p>
       <p className="mt-1 text-sm text-ink-2">

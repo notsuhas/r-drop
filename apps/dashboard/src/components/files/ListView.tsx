@@ -84,9 +84,9 @@ export default function ListView(props: IListView) {
                     {col.label}
                     {active &&
                       (sortAsc ? (
-                        <ArrowUp size={11} className="text-honey" />
+                        <ArrowUp size={11} className="text-accent-text" />
                       ) : (
-                        <ArrowDown size={11} className="text-honey" />
+                        <ArrowDown size={11} className="text-accent-text" />
                       ))}
                   </button>
                 </th>
@@ -110,7 +110,7 @@ export default function ListView(props: IListView) {
                   onClick={() => onEnterFolder(f.name)}
                   className="flex min-w-0 items-center gap-2.5 text-left"
                 >
-                  <Folder size={15} className="shrink-0 fill-honey/20 text-honey" />
+                  <Folder size={15} className="shrink-0 fill-accent/20 text-accent-text" />
                   <span className="min-w-0 truncate font-mono text-sm">{f.label}</span>
                 </button>
               </td>
@@ -136,7 +136,7 @@ export default function ListView(props: IListView) {
                 onContextMenu={(e) => onMenu(o.key, e)}
                 className={cx(
                   "group cursor-default border-b border-hairline transition-colors duration-(--duration-fast) last:border-b-0",
-                  isSel ? "bg-honey-wash" : "hover:bg-surface-2",
+                  isSel ? "bg-accent-wash" : "hover:bg-surface-2",
                   focusKey === o.key && !isSel && "bg-surface-2",
                 )}
               >

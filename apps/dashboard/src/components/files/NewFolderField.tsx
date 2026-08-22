@@ -25,7 +25,7 @@ export default function NewFolderField(props: INewFolderField) {
         else onCancel();
       }}
     >
-      <FolderPlus size={15} className="ml-1 shrink-0 text-honey" />
+      <FolderPlus size={15} className="ml-1 shrink-0 text-accent-text" />
       <span className="shrink-0 font-mono text-xs text-ink-3">
         {parent ? `${parent}/` : "root /"}
       </span>

@@ -23,7 +23,14 @@ export interface IMenuGroup {
 
 export interface IMenuAnchor {
   x: number;
+  /** Bottom edge of the trigger: where the menu prefers to open from. */
   y: number;
+  /**
+   * Top edge of the trigger. Needed to flip correctly: flipping relative to `y`
+   * would place the menu over the trigger it just opened from, which is what
+   * made menus near the bottom of the window run off-screen.
+   */
+  flipY?: number;
   /** Align the menu's right edge to x instead of its left edge. */
   alignRight?: boolean;
 }
@@ -37,6 +44,7 @@ interface IMenu {
 }
 
 const MARGIN = 8;
+const GAP = 6;
 
 export default function Menu(props: IMenu) {
   const { anchor, groups, onClose, label } = props;
@@ -48,18 +56,24 @@ export default function Menu(props: IMenu) {
   const enabled = flat.filter((it) => !it.disabled);
 
   // Measure before paint, then clamp into the viewport so a menu opened near an
-  // edge flips rather than spilling offscreen.
+  // edge flips above its trigger rather than spilling off the bottom.
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
     const { width, height } = el.getBoundingClientRect();
     const vw = window.innerWidth;
     const vh = window.innerHeight;
+
     let left = anchor.alignRight ? anchor.x - width : anchor.x;
-    let top = anchor.y;
     if (left + width > vw - MARGIN) left = vw - MARGIN - width;
     if (left < MARGIN) left = MARGIN;
-    if (top + height > vh - MARGIN) top = Math.max(MARGIN, anchor.y - height);
+
+    let top = anchor.y;
+    if (top + height > vh - MARGIN) {
+      // Flip above the trigger's *top* edge, not below its bottom.
+      const flipped = (anchor.flipY ?? anchor.y) - height - GAP;
+      top = flipped >= MARGIN ? flipped : Math.max(MARGIN, vh - MARGIN - height);
+    }
     setPos({ left, top });
   }, [anchor]);
 
@@ -112,7 +126,10 @@ export default function Menu(props: IMenu) {
       aria-label={label}
       style={{ left: pos?.left ?? anchor.x, top: pos?.top ?? anchor.y }}
       className={cx(
-        "fixed z-(--z-index-dropdown) min-w-52 max-w-72 overflow-hidden rounded-lg bg-surface-2 p-1 shadow-e3",
+        "fixed z-(--z-index-popover) min-w-52 max-w-72 overflow-hidden rounded-lg p-1",
+        // A floating pane over a near-black page needs its own edge; this is the
+        // one place a border and a shadow legitimately pair up.
+        "border border-hairline bg-popover shadow-e4",
         "animate-pop",
         pos ? "visible" : "invisible",
       )}

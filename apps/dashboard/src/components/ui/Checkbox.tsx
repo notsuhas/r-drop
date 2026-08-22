@@ -53,8 +53,8 @@ export default function Checkbox(props: ICheckbox) {
           "pointer-events-none flex h-full w-full items-center justify-center rounded-xs border",
           "transition-colors duration-(--duration-fast) ease-(--ease-out-quart)",
           on
-            ? "border-honey bg-honey text-honey-ink"
-            : "border-border-strong bg-surface/80 peer-hover:border-honey",
+            ? "border-accent bg-accent text-accent-ink"
+            : "border-border-strong bg-surface/80 peer-hover:border-accent",
         )}
       >
         {indeterminate ? (

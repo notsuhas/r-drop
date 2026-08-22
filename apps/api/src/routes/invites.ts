@@ -11,13 +11,51 @@ import type { Env } from "@/types";
 
 const EMAIL_FORMAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+interface IProfile {
+  name: string | null;
+  picture: string | null;
+}
+
+/** email (lowercased) -> WorkOS profile, empty when WorkOS is unavailable. */
+async function loadProfiles(env: Env["Bindings"]): Promise<Map<string, IProfile>> {
+  const profiles = new Map<string, IProfile>();
+  if (!workosConfigured(env)) return profiles;
+
+  const users = await getWorkos(env)
+    .userManagement.listUsers({ limit: 100 })
+    .catch(() => null);
+
+  for (const user of users?.data ?? []) {
+    profiles.set(user.email.toLowerCase(), {
+      name: [user.firstName, user.lastName].filter(Boolean).join(" ") || null,
+      picture: user.profilePictureUrl ?? null,
+    });
+  }
+  return profiles;
+}
+
 export const invites = new Hono<Env>()
   .use("/invites/*", requireAuth(), requireAdmin)
   .use("/invites", requireAuth(), requireAdmin)
 
+  // Invites only store an email; the display name and avatar live in WorkOS.
+  // One listUsers call enriches the whole page, and the list still renders
+  // (without faces) if WorkOS is unconfigured or unreachable.
   .get("/invites", async (c) => {
     const db = drizzle(c.env.DB, { schema });
-    return c.json(await db.query.invites.findMany());
+    const rows = await db.query.invites.findMany();
+    const profiles = await loadProfiles(c.env);
+
+    return c.json(
+      rows.map((row) => {
+        const profile = profiles.get(row.email.toLowerCase());
+        return {
+          ...row,
+          name: profile?.name ?? null,
+          picture: profile?.picture ?? null,
+        };
+      }),
+    );
   })
 
   .post("/invites", zValidator("json", z.object({ email: z.string() })), async (c) => {

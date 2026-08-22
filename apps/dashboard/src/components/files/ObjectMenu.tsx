@@ -5,6 +5,7 @@ import {
   Braces,
   Download,
   ExternalLink,
+  FileCode2,
   FileJson,
   Info,
   Link2,
@@ -65,7 +66,7 @@ export default function ObjectMenu(props: IObjectMenu) {
         {
           id: "ts",
           label: "TypeScript const",
-          icon: <Braces size={14} />,
+          icon: <FileCode2 size={14} />,
           onSelect: () => onCopy("ts"),
         },
         {
@@ -106,7 +107,7 @@ export default function ObjectMenu(props: IObjectMenu) {
       items: [
         {
           id: "delete",
-          label: single ? `Delete ${basename(single.key)}` : `Delete ${many} files`,
+          label: single ? "Delete" : `Delete ${many} files`,
           icon: <Trash2 size={14} />,
           kbd: "Del",
           danger: true,

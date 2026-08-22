@@ -12,6 +12,7 @@ interface IFileTile {
   selected: boolean;
   focused: boolean;
   onSelect: (event: React.MouseEvent) => void;
+  onToggleSelect: (event: React.MouseEvent) => void;
   onOpen: () => void;
   onInspect: () => void;
   onCopyUrl: () => void;
@@ -19,7 +20,17 @@ interface IFileTile {
 }
 
 export default function FileTile(props: IFileTile) {
-  const { object, selected, focused, onSelect, onOpen, onInspect, onCopyUrl, onMenu } = props;
+  const {
+    object,
+    selected,
+    focused,
+    onSelect,
+    onToggleSelect,
+    onOpen,
+    onInspect,
+    onCopyUrl,
+    onMenu,
+  } = props;
   const name = basename(object.key);
   const kind = fileKind(object.contentType, object.key);
 
@@ -60,7 +71,12 @@ export default function FileTile(props: IFileTile) {
       </button>
 
       <span className="absolute left-2 top-2">
-        <Checkbox checked={selected} hideUntilHover label={`Select ${name}`} onChange={onSelect} />
+        <Checkbox
+          checked={selected}
+          hideUntilHover
+          label={`Select ${name}`}
+          onChange={onToggleSelect}
+        />
       </span>
 
       {/* Hover actions sit on a scrim so icons stay legible over any thumbnail. */}

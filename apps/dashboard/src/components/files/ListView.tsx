@@ -23,6 +23,8 @@ interface IListView {
   onSelectAll: () => void;
   onEnterFolder: (name: string) => void;
   onSelect: (key: string, event: React.MouseEvent) => void;
+  /** Checkbox ticks: additive, unlike a click on the row itself. */
+  onToggleSelect: (key: string, event: React.MouseEvent) => void;
   onOpen: (object: IObject) => void;
   onMenu: (key: string, event: React.MouseEvent) => void;
 }
@@ -47,6 +49,7 @@ export default function ListView(props: IListView) {
     onSelectAll,
     onEnterFolder,
     onSelect,
+    onToggleSelect,
     onOpen,
     onMenu,
   } = props;
@@ -146,7 +149,7 @@ export default function ListView(props: IListView) {
                     label={`Select ${name}`}
                     onChange={(e) => {
                       e.stopPropagation();
-                      onSelect(o.key, e);
+                      onToggleSelect(o.key, e);
                     }}
                   />
                 </td>

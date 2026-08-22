@@ -78,6 +78,7 @@ export default function FilesContent(props: IFilesContent) {
         onSelectAll={props.onSelectAll}
         onEnterFolder={props.onEnterFolder}
         onSelect={props.onSelect}
+        onToggleSelect={props.onToggleSelect}
         onOpen={props.onOpen}
         onMenu={props.onMenu}
       />
@@ -91,6 +92,7 @@ export default function FilesContent(props: IFilesContent) {
       focusKey={props.focusKey}
       onEnterFolder={props.onEnterFolder}
       onSelect={props.onSelect}
+      onToggleSelect={props.onToggleSelect}
       onOpen={props.onOpen}
       onInspect={props.onInspect}
       onCopyUrl={props.onCopyUrl}

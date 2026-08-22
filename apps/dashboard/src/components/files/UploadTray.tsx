@@ -1,6 +1,6 @@
 import { Check } from "lucide-react";
-import type { IUploadItem } from "../../hooks/useUploads";
-import { fmtSize } from "../../lib/format";
+import type { IUploadItem } from "@/hooks/useUploads";
+import { fmtSize } from "@/lib/format";
 
 interface IUploadTray {
   items: IUploadItem[];

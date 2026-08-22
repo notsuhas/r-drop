@@ -7,9 +7,9 @@ import type { Context } from "hono";
 import { Hono } from "hono";
 import { sha256 } from "hono/utils/crypto";
 import { z } from "zod";
-import * as schema from "../db/schema";
-import { requireAuth } from "../middleware/auth";
-import type { Env } from "../types";
+import * as schema from "@/db/schema";
+import { requireAuth } from "@/middleware/auth";
+import type { Env } from "@/types";
 
 const sessionActor = (c: Context<Env>) => {
   const actor = c.get("actor");

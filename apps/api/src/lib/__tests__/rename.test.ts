@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { resolveRenameTarget } from "../rename";
+import { resolveRenameTarget } from "@/lib/rename";
 
 describe("resolveRenameTarget", () => {
   test("rename within folder", () =>

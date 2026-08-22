@@ -1,12 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import AgentSetupCard from "../components/tokens/AgentSetupCard";
-import TokenRow from "../components/tokens/TokenRow";
-import Button from "../components/ui/Button";
-import CopyField from "../components/ui/CopyField";
-import Empty from "../components/ui/Empty";
-import Input from "../components/ui/Input";
-import { api } from "../lib/api";
+import AgentSetupCard from "@/components/tokens/AgentSetupCard";
+import TokenRow from "@/components/tokens/TokenRow";
+import Button from "@/components/ui/Button";
+import CopyField from "@/components/ui/CopyField";
+import Empty from "@/components/ui/Empty";
+import Input from "@/components/ui/Input";
+import { api } from "@/lib/api";
 
 export default function Tokens() {
   const [name, setName] = useState("");

@@ -1,10 +1,10 @@
 // Multipart upload; objects are immutable and CDN-cached for a year.
 import { Hono } from "hono";
-import { RESERVED_PREFIX } from "../lib/keys";
-import { regenerateManifest } from "../lib/manifest";
-import { resolveUpload } from "../lib/upload-input";
-import { requireAuth } from "../middleware/auth";
-import type { Env } from "../types";
+import { RESERVED_PREFIX } from "@/lib/keys";
+import { regenerateManifest } from "@/lib/manifest";
+import { resolveUpload } from "@/lib/upload-input";
+import { requireAuth } from "@/middleware/auth";
+import type { Env } from "@/types";
 
 export const upload = new Hono<Env>().post("/upload", requireAuth("write"), async (c) => {
   const form = await c.req.formData().catch(() => null);

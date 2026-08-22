@@ -19,9 +19,11 @@ export const extension = (name: string) => {
   return dot > 0 ? name.slice(dot + 1).toLowerCase() : "";
 };
 
-export type FileKind = "image" | "video" | "audio" | "other";
+export type FileKind = "image" | "rive" | "video" | "audio" | "other";
 
-export function fileKind(contentType: string): FileKind {
+export function fileKind(contentType: string, key: string): FileKind {
+  // .riv arrives as octet-stream, so the extension has to decide.
+  if (extension(key) === "riv") return "rive";
   if (contentType.startsWith("image/")) return "image";
   if (contentType.startsWith("video/")) return "video";
   if (contentType.startsWith("audio/")) return "audio";

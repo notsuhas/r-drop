@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { formatLinks } from "../links";
+import { formatLinks } from "@/lib/links";
 
 const objects = [
   { key: "checkout/hero-banner.png", url: "https://cdn.x/checkout/hero-banner.png" },

@@ -1,5 +1,5 @@
-import BrandMark from "../components/auth/BrandMark";
-import GoogleSignInButton from "../components/auth/GoogleSignInButton";
+import BrandMark from "@/components/auth/BrandMark";
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
 const ERROR_COPY: Record<string, string> = {
   not_invited: "That Google account isn't invited. Ask for an invite, then sign in again.",

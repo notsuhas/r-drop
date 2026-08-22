@@ -1,5 +1,5 @@
 import { WorkOS } from "@workos-inc/node/worker";
-import type { Bindings } from "../bindings";
+import type { Bindings } from "@/bindings";
 
 /** WorkOS credentials are user-supplied secrets; auth routes 503 until both exist. */
 export const workosConfigured = (env: Bindings) =>

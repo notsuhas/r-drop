@@ -1,10 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Sparkles } from "lucide-react";
 import { useState } from "react";
-import { buildAgentSetupPrompt } from "../../lib/agent-content";
-import { api } from "../../lib/api";
-import { getConfig } from "../../lib/config";
-import Button from "../ui/Button";
+import Button from "@/components/ui/Button";
+import { buildAgentSetupPrompt } from "@/lib/agent-content";
+import { api } from "@/lib/api";
+import { getConfig } from "@/lib/config";
 
 export default function AgentSetupCard() {
   const [done, setDone] = useState<string | null>(null);

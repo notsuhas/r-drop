@@ -1,6 +1,6 @@
 import { Check, Pencil, Trash2, X } from "lucide-react";
 import { useState } from "react";
-import Input from "../ui/Input";
+import Input from "@/components/ui/Input";
 
 interface ITokenRowData {
   id: string;

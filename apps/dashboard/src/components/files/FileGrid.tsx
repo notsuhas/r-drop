@@ -1,4 +1,4 @@
-import type { IObject } from "../../lib/api";
+import type { IObject } from "@/lib/api";
 import FileCard from "./FileCard";
 
 interface IFileGrid {

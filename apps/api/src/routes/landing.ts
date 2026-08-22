@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import type { Env } from "../types";
+import type { Env } from "@/types";
 
 // The CDN host's root is routed here (exact root only); every other path on
 // that host is served straight from R2 without touching the worker.

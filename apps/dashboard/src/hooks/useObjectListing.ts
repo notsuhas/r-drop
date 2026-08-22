@@ -2,9 +2,9 @@
 // sorted and filtered into the visible set.
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
-import type { SortKey } from "../components/files/ListView";
-import { api, type IObject } from "../lib/api";
-import { basename } from "../lib/format";
+import type { SortKey } from "@/components/files/ListView";
+import { api, type IObject } from "@/lib/api";
+import { basename } from "@/lib/format";
 
 function sortObjects(objects: IObject[], sortKey: SortKey, sortAsc: boolean) {
   const dir = sortAsc ? 1 : -1;

@@ -2,11 +2,11 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
-import { cleanFolder, folderOf, isReservedKey, RESERVED_PREFIX } from "../lib/keys";
-import { listAll, regenerateManifest } from "../lib/manifest";
-import { resolveRenameTarget } from "../lib/rename";
-import { requireAuth } from "../middleware/auth";
-import type { Env } from "../types";
+import { cleanFolder, folderOf, isReservedKey, RESERVED_PREFIX } from "@/lib/keys";
+import { listAll, regenerateManifest } from "@/lib/manifest";
+import { resolveRenameTarget } from "@/lib/rename";
+import { requireAuth } from "@/middleware/auth";
+import type { Env } from "@/types";
 
 export const objects = new Hono<Env>()
   .get("/objects", requireAuth(), async (c) => {

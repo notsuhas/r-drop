@@ -1,8 +1,8 @@
 import { Download, ExternalLink, Pencil, X } from "lucide-react";
 import { useState } from "react";
-import type { IObject } from "../../lib/api";
-import { basename, fileKind, fmtSize } from "../../lib/format";
-import Button from "../ui/Button";
+import Button from "@/components/ui/Button";
+import type { IObject } from "@/lib/api";
+import { basename, fileKind, fmtSize } from "@/lib/format";
 import FilePreview from "./FilePreview";
 
 interface IInspectorDrawer {
@@ -21,7 +21,7 @@ export default function InspectorDrawer(props: IInspectorDrawer) {
   const [name, setName] = useState(basename(object.key));
 
   const rows: [string, string][] = [
-    ["type", object.contentType || fileKind(object.contentType)],
+    ["type", object.contentType || fileKind(object.contentType, object.key)],
     ["size", fmtSize(object.size)],
     ["uploaded", new Date(object.uploaded).toLocaleString()],
   ];

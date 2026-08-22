@@ -3,11 +3,11 @@ import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { z } from "zod";
-import * as schema from "../db/schema";
-import { isAdminEmail } from "../lib/admin";
-import { getWorkos, workosConfigured } from "../lib/workos";
-import { requireAdmin, requireAuth } from "../middleware/auth";
-import type { Env } from "../types";
+import * as schema from "@/db/schema";
+import { isAdminEmail } from "@/lib/admin";
+import { getWorkos, workosConfigured } from "@/lib/workos";
+import { requireAdmin, requireAuth } from "@/middleware/auth";
+import type { Env } from "@/types";
 
 const EMAIL_FORMAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

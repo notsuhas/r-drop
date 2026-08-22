@@ -1,6 +1,6 @@
 import { LogOut } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import BrandMark from "../auth/BrandMark";
+import BrandMark from "@/components/auth/BrandMark";
 
 interface ISidebarUser {
   name?: string;

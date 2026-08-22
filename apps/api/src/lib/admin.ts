@@ -1,4 +1,4 @@
-import type { Bindings } from "../bindings";
+import type { Bindings } from "@/bindings";
 
 /** ADMIN_EMAILS is a comma-separated allowlist; admins bypass the invite gate. */
 export const isAdminEmail = (env: Bindings, email: string) =>

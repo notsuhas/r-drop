@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { COPY_FORMATS, type CopyFormat } from "../../lib/links";
+import { COPY_FORMATS, type CopyFormat } from "@/lib/links";
 
 interface ISelectionPill {
   count: number;

@@ -1,6 +1,6 @@
 import { Check, Copy, Info } from "lucide-react";
-import type { IObject } from "../../lib/api";
-import { basename, extension, fmtSize } from "../../lib/format";
+import type { IObject } from "@/lib/api";
+import { basename, extension, fmtSize } from "@/lib/format";
 import FilePreview from "./FilePreview";
 
 interface IFileCard {

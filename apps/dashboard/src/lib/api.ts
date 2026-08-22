@@ -1,6 +1,7 @@
 // Typed API client via Hono RPC — response types are inferred from the worker's AppType.
+
+import type { AppType } from "@api/index";
 import { hc, type InferResponseType } from "hono/client";
-import type { AppType } from "../../../api/src/index";
 
 const client = hc<AppType>("/");
 

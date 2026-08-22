@@ -2,11 +2,11 @@
 import { and, eq, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
-import * as schema from "../db/schema";
-import { isAdminEmail } from "../lib/admin";
-import { clearSessionCookie, getSessionUser, setSessionCookie } from "../lib/session";
-import { getWorkos } from "../lib/workos";
-import type { Env } from "../types";
+import * as schema from "@/db/schema";
+import { isAdminEmail } from "@/lib/admin";
+import { clearSessionCookie, getSessionUser, setSessionCookie } from "@/lib/session";
+import { getWorkos } from "@/lib/workos";
+import type { Env } from "@/types";
 
 export const auth = new Hono<Env>()
   .get("/auth/login", (c) => {

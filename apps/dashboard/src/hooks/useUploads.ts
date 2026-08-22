@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import { uploadWithProgress } from "../lib/upload";
+import { uploadWithProgress } from "@/lib/upload";
 
 export type UploadStatus = "queued" | "reading" | "uploading" | "done" | "error";
 

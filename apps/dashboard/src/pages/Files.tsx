@@ -1,14 +1,14 @@
 // File browser: pure composition — all state lives in useFileBrowser.
-import DropOverlay from "../components/files/DropOverlay";
-import FilesContent from "../components/files/FilesContent";
-import FilesToolbar from "../components/files/FilesToolbar";
-import FolderChips from "../components/files/FolderChips";
-import InspectorDrawer from "../components/files/InspectorDrawer";
-import SelectionPill from "../components/files/SelectionPill";
-import UploadTray from "../components/files/UploadTray";
-import { useDropZone } from "../hooks/useDropZone";
-import { useFileBrowser } from "../hooks/useFileBrowser";
-import { useMarquee } from "../hooks/useMarquee";
+import DropOverlay from "@/components/files/DropOverlay";
+import FilesContent from "@/components/files/FilesContent";
+import FilesToolbar from "@/components/files/FilesToolbar";
+import FolderChips from "@/components/files/FolderChips";
+import InspectorDrawer from "@/components/files/InspectorDrawer";
+import SelectionPill from "@/components/files/SelectionPill";
+import UploadTray from "@/components/files/UploadTray";
+import { useDropZone } from "@/hooks/useDropZone";
+import { useFileBrowser } from "@/hooks/useFileBrowser";
+import { useMarquee } from "@/hooks/useMarquee";
 
 export default function Files() {
   const b = useFileBrowser();

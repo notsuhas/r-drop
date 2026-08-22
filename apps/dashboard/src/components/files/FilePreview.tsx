@@ -1,4 +1,5 @@
-import { basename, extension, fileKind } from "../../lib/format";
+import { lazy, Suspense } from "react";
+import { basename, extension, fileKind } from "@/lib/format";
 
 interface IFilePreview {
   url: string;
@@ -7,12 +8,14 @@ interface IFilePreview {
 }
 
 // Checkerboard so transparent assets read against something.
+const RivePreview = lazy(() => import("./RivePreview"));
+
 const checker =
   "bg-[length:16px_16px] bg-[conic-gradient(rgba(255,255,255,0.04)_90deg,transparent_90deg_180deg,rgba(255,255,255,0.04)_180deg_270deg,transparent_270deg)]";
 
 export default function FilePreview(props: IFilePreview) {
   const { url, keyName, contentType } = props;
-  const kind = fileKind(contentType);
+  const kind = fileKind(contentType, keyName);
 
   if (kind === "image")
     return (
@@ -24,6 +27,15 @@ export default function FilePreview(props: IFilePreview) {
           className="h-full w-full object-contain p-2 transition-transform duration-200 group-hover:scale-[1.04]"
         />
       </div>
+    );
+
+  if (kind === "rive")
+    return (
+      <Suspense fallback={<ExtBadge label="riv" />}>
+        <div className={`h-full w-full ${checker}`}>
+          <RivePreview url={url} />
+        </div>
+      </Suspense>
     );
 
   if (kind === "video")

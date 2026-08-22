@@ -1,6 +1,6 @@
 // Grid/list toggle (persisted) and sort order.
 import { useCallback, useState } from "react";
-import type { SortKey } from "../components/files/ListView";
+import type { SortKey } from "@/components/files/ListView";
 
 const VIEW_STORAGE_KEY = "ho-drive:view";
 

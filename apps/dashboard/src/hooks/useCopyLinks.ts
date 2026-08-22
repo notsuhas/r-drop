@@ -1,8 +1,8 @@
 // Clipboard copy for the selection pill, with a transient "copied" flash.
 import { useCallback, useState } from "react";
-import type { IObject } from "../lib/api";
-import { getConfig } from "../lib/config";
-import { type CopyFormat, formatLinks } from "../lib/links";
+import type { IObject } from "@/lib/api";
+import { getConfig } from "@/lib/config";
+import { type CopyFormat, formatLinks } from "@/lib/links";
 
 export function useCopyLinks(getObjects: () => IObject[], getFolder: () => string) {
   const [copied, setCopied] = useState(false);

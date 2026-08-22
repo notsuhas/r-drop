@@ -1,6 +1,6 @@
 import { LayoutGrid, List } from "lucide-react";
 import { useRef } from "react";
-import Button from "../ui/Button";
+import Button from "@/components/ui/Button";
 
 interface IFilesToolbar {
   folder: string;

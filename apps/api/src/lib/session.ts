@@ -1,6 +1,6 @@
 import type { Context } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
-import type { Env } from "../types";
+import type { Env } from "@/types";
 import { getWorkos, workosConfigured } from "./workos";
 
 const SESSION_COOKIE = "hod_session";

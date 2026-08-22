@@ -1,7 +1,7 @@
 // File-browser data layer: routing, listing, mutations, and copy-links.
 // UI state lives in useSelection / useViewPrefs; pages/Files.tsx composes.
 import { useCallback, useState } from "react";
-import type { IObject } from "../lib/api";
+import type { IObject } from "@/lib/api";
 import { useCopyLinks } from "./useCopyLinks";
 import { useFolderRoute } from "./useFolderRoute";
 import { useObjectListing } from "./useObjectListing";

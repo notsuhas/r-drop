@@ -3,11 +3,11 @@ import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { createMiddleware } from "hono/factory";
 import { sha256 } from "hono/utils/crypto";
-import type { Bindings } from "../bindings";
-import * as schema from "../db/schema";
-import { isAdminEmail } from "../lib/admin";
-import { getSessionUser } from "../lib/session";
-import type { Actor, Env } from "../types";
+import type { Bindings } from "@/bindings";
+import * as schema from "@/db/schema";
+import { isAdminEmail } from "@/lib/admin";
+import { getSessionUser } from "@/lib/session";
+import type { Actor, Env } from "@/types";
 
 const TOKEN_FORMAT = /^hod_[a-f0-9]{32}$/;
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { MAX_UPLOAD_BYTES, resolveUpload } from "../upload-input";
+import { MAX_UPLOAD_BYTES, resolveUpload } from "@/lib/upload-input";
 
 const form = (entries: Record<string, string | File>) => {
   const f = new FormData();

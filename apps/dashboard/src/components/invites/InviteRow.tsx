@@ -1,6 +1,6 @@
 import { useState } from "react";
-import Badge from "../ui/Badge";
-import Button from "../ui/Button";
+import Badge from "@/components/ui/Badge";
+import Button from "@/components/ui/Button";
 
 interface IInviteRowData {
   email: string;

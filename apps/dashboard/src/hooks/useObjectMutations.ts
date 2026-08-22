@@ -1,6 +1,6 @@
 // Delete and rename/move mutations; onSettled refetches every listing.
 import { useMutation } from "@tanstack/react-query";
-import { api } from "../lib/api";
+import { api } from "@/lib/api";
 
 export function useObjectMutations(invalidate: () => void, onDone: () => void) {
   const remove = useMutation({

@@ -1,7 +1,8 @@
 // Dispatches the main content area: skeleton, empty state, list, or grid.
-import type { IObject } from "../../lib/api";
-import Empty from "../ui/Empty";
-import SkeletonGrid from "../ui/Skeleton";
+
+import Empty from "@/components/ui/Empty";
+import SkeletonGrid from "@/components/ui/Skeleton";
+import type { IObject } from "@/lib/api";
 import FileGrid from "./FileGrid";
 import ListView, { type SortKey } from "./ListView";
 

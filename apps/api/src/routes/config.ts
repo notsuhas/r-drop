@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import type { Env } from "../types";
+import type { Env } from "@/types";
 
 // Public, unauthenticated: the CDN base is public knowledge and the login
 // page needs it before any session exists.

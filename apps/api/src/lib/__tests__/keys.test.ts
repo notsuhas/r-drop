@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { camelCase, cleanFolder, isReservedKey, slugify } from "../keys";
-import { buildManifest } from "../manifest";
+import { camelCase, cleanFolder, isReservedKey, slugify } from "@/lib/keys";
+import { buildManifest } from "@/lib/manifest";
 
 describe("slugify", () => {
   test("lowercases and dashes", () =>

@@ -1,6 +1,6 @@
 import { Check, Info } from "lucide-react";
-import type { IObject } from "../../lib/api";
-import { basename, extension, fmtSize } from "../../lib/format";
+import type { IObject } from "@/lib/api";
+import { basename, extension, fmtSize } from "@/lib/format";
 
 export type SortKey = "name" | "size" | "uploaded";
 

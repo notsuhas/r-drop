@@ -1,5 +1,5 @@
 // Folder manifests: public JSON indexes at _manifest/<folder>.json, regenerated on every write.
-import type { Bindings } from "../bindings";
+import type { Bindings } from "@/bindings";
 import { camelCase, RESERVED_PREFIX } from "./keys";
 
 export async function listAll(bucket: R2Bucket, options: R2ListOptions) {

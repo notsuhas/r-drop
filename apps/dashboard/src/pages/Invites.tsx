@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import InviteForm from "../components/invites/InviteForm";
-import InviteRow from "../components/invites/InviteRow";
-import Empty from "../components/ui/Empty";
-import { api } from "../lib/api";
+import InviteForm from "@/components/invites/InviteForm";
+import InviteRow from "@/components/invites/InviteRow";
+import Empty from "@/components/ui/Empty";
+import { api } from "@/lib/api";
 
 export default function Invites() {
   const qc = useQueryClient();

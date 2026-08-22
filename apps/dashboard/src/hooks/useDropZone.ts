@@ -1,6 +1,6 @@
 // Window-level drag-drop: tracks the overlay state and walks dropped folders.
 import { useState } from "react";
-import { collectDropped } from "../lib/dropped";
+import { collectDropped } from "@/lib/dropped";
 
 export function useDropZone(onFile: (file: File, dir: string) => void) {
   const [dragging, setDragging] = useState(false);

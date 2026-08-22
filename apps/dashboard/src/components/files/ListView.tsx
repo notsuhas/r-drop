@@ -73,7 +73,11 @@ export default function ListView(props: IListView) {
               <td className="border-r border-line px-3 py-2">
                 <div className="flex items-center gap-2">
                   {/* biome-ignore lint/a11y/noStaticElementInteractions: stops the row toggle while renaming */}
-                  <span onClick={(e) => e.stopPropagation()} className="min-w-0">
+                  <span
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                    className="min-w-0"
+                  >
                     <RenameField
                       value={basename(o.key)}
                       compact

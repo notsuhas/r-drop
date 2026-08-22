@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import Button from "../components/Button";
-import Empty from "../components/Empty";
+import Button from "../components/ui/Button";
+import Empty from "../components/ui/Empty";
 import { api } from "../lib/api";
 
 export default function Invites() {
@@ -23,8 +23,8 @@ export default function Invites() {
     <div className="flex-1 overflow-y-auto p-8">
       <h1 className="font-display text-lg font-semibold">Invites</h1>
       <p className="mt-1 text-sm text-muted">
-        Invite a Google account by email. They sign in at ho-drive.theclau.de — no link to send, the
-        email itself is the invite.
+        Invite a Google account by email. They just sign in here — no link to send, the email itself
+        is the invite.
       </p>
 
       <form
@@ -39,7 +39,7 @@ export default function Invites() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="person@gmail.com"
-          className="flex-1 rounded-lg border border-line bg-panel px-3 py-1.5 font-mono text-sm placeholder:text-muted"
+          className="flex-1 rounded-none border border-line bg-panel px-3 py-1.5 font-mono text-sm placeholder:text-muted"
         />
         <Button variant="primary" type="submit" disabled={add.isPending}>
           Invite
@@ -54,7 +54,7 @@ export default function Invites() {
           <Empty title="No invites yet" hint="Only invited emails can sign in with Google." />
         </div>
       ) : (
-        <div className="mt-8 max-w-xl divide-y divide-line rounded-xl border border-line bg-panel">
+        <div className="mt-8 max-w-xl divide-y divide-line rounded-none border border-line bg-panel">
           {data.map((inv) => (
             <div key={inv.email} className="flex items-center justify-between gap-4 px-4 py-3">
               <div>
@@ -66,7 +66,7 @@ export default function Invites() {
                 </p>
               </div>
               {inv.usedAt ? (
-                <span className="rounded-md bg-[rgba(97,214,155,0.12)] px-2 py-0.5 text-xs text-ok">
+                <span className=" rounded-none bg-[rgba(97,214,155,0.12)] px-2 py-0.5 text-xs text-ok">
                   active
                 </span>
               ) : (

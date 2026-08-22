@@ -1,12 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import Button from "../components/Button";
-import Empty from "../components/Empty";
+import Button from "../components/ui/Button";
+import Empty from "../components/ui/Empty";
+import { buildAgentPrompt } from "../lib/agentPrompt";
 import { api } from "../lib/api";
+import { getConfig } from "../lib/config";
 
 export default function Tokens() {
   const [name, setName] = useState("");
   const [fresh, setFresh] = useState<string | null>(null);
+  const [copiedWhat, setCopiedWhat] = useState<string | null>(null);
+  const flash = (what: string) => {
+    setCopiedWhat(what);
+    setTimeout(() => setCopiedWhat(null), 1500);
+  };
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({ queryKey: ["tokens"], queryFn: api.tokens });
 
@@ -42,23 +49,61 @@ export default function Tokens() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="claude-code-local"
-          className="flex-1 rounded-lg border border-line bg-panel px-3 py-1.5 font-mono text-sm placeholder:text-muted"
+          className="flex-1 rounded-none border border-line bg-panel px-3 py-1.5 font-mono text-sm placeholder:text-muted"
         />
         <Button variant="primary" type="submit" disabled={create.isPending}>
           Create token
         </Button>
       </form>
+      <button
+        type="button"
+        onClick={async () => {
+          const { publicBase } = await getConfig();
+          await navigator.clipboard.writeText(
+            buildAgentPrompt({ publicBase, appBase: window.location.origin }),
+          );
+          flash("prompt");
+        }}
+        className="mt-3 text-xs text-muted underline-offset-2 hover:text-ink hover:underline"
+      >
+        Copy agent prompt without a token (expects HO_DRIVE_TOKEN in the agent's env)
+      </button>
 
       {fresh && (
-        <div className="mt-4 max-w-xl rounded-xl border border-[rgba(255,178,86,0.4)] bg-[rgba(255,178,86,0.06)] p-4">
+        <div className="mt-4 max-w-xl rounded-none border border-[rgba(255,178,86,0.4)] bg-[rgba(255,178,86,0.06)] p-4">
           <p className="text-sm font-medium">Copy this now — it won't be shown again.</p>
           <div className="mt-2 flex items-center gap-2">
-            <code className="flex-1 truncate rounded-lg bg-bg px-3 py-2 font-mono text-xs">
+            <code className="flex-1 truncate rounded-none bg-bg px-3 py-2 font-mono text-xs">
               {fresh}
             </code>
-            <Button onClick={() => navigator.clipboard.writeText(fresh)}>Copy</Button>
+            <Button
+              onClick={() => {
+                navigator.clipboard.writeText(fresh);
+                flash("token");
+              }}
+            >
+              Copy token
+            </Button>
             <Button onClick={() => setFresh(null)}>Done</Button>
           </div>
+          <div className="mt-3 flex items-center gap-2">
+            <Button
+              variant="primary"
+              onClick={async () => {
+                const { publicBase } = await getConfig();
+                await navigator.clipboard.writeText(
+                  buildAgentPrompt({ publicBase, appBase: window.location.origin, token: fresh }),
+                );
+                flash("prompt");
+              }}
+            >
+              Copy agent prompt
+            </Button>
+            <span className="text-xs text-muted">
+              full instructions + this token — paste straight into your agent
+            </span>
+          </div>
+          {copiedWhat && <p className="mt-2 text-xs text-ok">copied {copiedWhat}</p>}
         </div>
       )}
 
@@ -69,7 +114,7 @@ export default function Tokens() {
           <Empty title="No tokens" hint="Create one and drop it into your agent's environment." />
         </div>
       ) : (
-        <div className="mt-8 max-w-xl divide-y divide-line rounded-xl border border-line bg-panel">
+        <div className="mt-8 max-w-xl divide-y divide-line rounded-none border border-line bg-panel">
           {data.map((t) => (
             <div key={t.id} className="flex items-center justify-between gap-4 px-4 py-3">
               <div>

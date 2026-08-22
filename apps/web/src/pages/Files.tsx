@@ -1,46 +1,31 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
-import Button from "../components/Button";
-import Empty from "../components/Empty";
-import { api, type IObject, PUBLIC_BASE } from "../lib/api";
-
-type CopyFormat = "newline" | "json" | "ts" | "manifest";
-
-const fmtSize = (n: number) =>
-  n < 1024
-    ? `${n} B`
-    : n < 1048576
-      ? `${(n / 1024).toFixed(1)} KB`
-      : `${(n / 1048576).toFixed(1)} MB`;
-
-const camel = (s: string) =>
-  s
-    .replace(/\.[^.]+$/, "")
-    .replace(/[^a-zA-Z0-9]+(.)/g, (_, c: string) => c.toUpperCase())
-    .replace(/^[A-Z]/, (c) => c.toLowerCase());
-
-const basename = (key: string) => key.slice(key.lastIndexOf("/") + 1);
-
-function formatLinks(objects: IObject[], format: CopyFormat, folder: string) {
-  if (format === "manifest") return `${PUBLIC_BASE}/_manifest/${folder}.json`;
-  if (format === "newline") return objects.map((o) => o.url).join("\n");
-  const entries = objects.map((o) => [camel(basename(o.key)), o.url] as const);
-  if (format === "json") return JSON.stringify(Object.fromEntries(entries), null, 2);
-  return `export const ASSETS = {\n${entries
-    .map(([k, v]) => `  ${k}: "${v}",`)
-    .join("\n")}\n} as const;`;
-}
+import { Folder } from "lucide-react";
+import { useCallback, useMemo, useRef, useState } from "react";
+import DropOverlay from "../components/files/DropOverlay";
+import FileCard from "../components/files/FileCard";
+import InspectorDrawer from "../components/files/InspectorDrawer";
+import SelectionPill from "../components/files/SelectionPill";
+import UploadTray from "../components/files/UploadTray";
+import Button from "../components/ui/Button";
+import Empty from "../components/ui/Empty";
+import SkeletonGrid from "../components/ui/Skeleton";
+import { useMarquee } from "../hooks/useMarquee";
+import { useUploads } from "../hooks/useUploads";
+import { api, type IObject } from "../lib/api";
+import { getConfig } from "../lib/config";
+import { collectDropped } from "../lib/dropped";
+import { basename } from "../lib/format";
+import { type CopyFormat, formatLinks } from "../lib/links";
 
 export default function Files() {
   const [folder, setFolder] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [inspected, setInspected] = useState<IObject | null>(null);
   const [dragging, setDragging] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [filter, setFilter] = useState("");
   const [newFolderOpen, setNewFolderOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
-  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
-  const [failures, setFailures] = useState<string[]>([]);
   const fileInput = useRef<HTMLInputElement>(null);
   const qc = useQueryClient();
 
@@ -50,65 +35,69 @@ export default function Files() {
   });
 
   const uploadTarget = folder || "scratch";
-
-  const upload = useMutation({
-    mutationFn: async (files: File[]) => {
-      setFailures([]);
-      setProgress({ done: 0, total: files.length });
-      const failed: string[] = [];
-      for (const f of files) {
-        try {
-          await api.upload(f, uploadTarget);
-        } catch (err) {
-          failed.push(`${f.name}: ${err instanceof Error ? err.message : "failed"}`);
-        }
-        setProgress((p) => (p ? { ...p, done: p.done + 1 } : p));
-      }
-      setFailures(failed);
-    },
-    onSettled: () => {
-      setProgress(null);
-      qc.invalidateQueries({ queryKey: ["objects"] });
-    },
-  });
+  const invalidate = useCallback(() => qc.invalidateQueries({ queryKey: ["objects"] }), [qc]);
+  const uploads = useUploads(invalidate);
 
   const remove = useMutation({
     mutationFn: async (keys: string[]) => {
       for (const k of keys) await api.deleteObject(k);
     },
-    onSuccess: () => setSelected(new Set()),
-    onSettled: () => qc.invalidateQueries({ queryKey: ["objects"] }),
+    onSuccess: () => {
+      setSelected(new Set());
+      setInspected(null);
+    },
+    onSettled: invalidate,
   });
 
-  const visible = (data?.objects ?? []).filter((o) => !o.key.startsWith("_manifest/"));
-  const folders = (data?.folders ?? []).filter((f) => f !== "_manifest");
-  const selectedObjects = visible.filter((o) => selected.has(o.key));
+  const visible = useMemo(() => {
+    const objects = [...(data?.objects ?? [])].sort((a, b) => b.uploaded.localeCompare(a.uploaded));
+    if (!filter) return objects;
+    const q = filter.toLowerCase();
+    return objects.filter((o) => basename(o.key).toLowerCase().includes(q));
+  }, [data, filter]);
 
-  const toggle = (key: string) => {
-    setConfirmingDelete(false);
+  const selectedObjects = visible.filter((o) => selected.has(o.key));
+  const allSelected = visible.length > 0 && selectedObjects.length === visible.length;
+
+  const marquee = useMarquee(
+    useCallback((keys: string[], additive: boolean) => {
+      setSelected((prev) => (additive ? new Set([...prev, ...keys]) : new Set(keys)));
+    }, []),
+  );
+
+  const toggle = (key: string) =>
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
       return next;
     });
+
+  const flashCopied = () => {
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
   };
 
   const copy = async (format: CopyFormat) => {
-    await navigator.clipboard.writeText(formatLinks(selectedObjects, format, folder || "scratch"));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    const { publicBase } = await getConfig();
+    await navigator.clipboard.writeText(
+      formatLinks(selectedObjects, format, folder || "scratch", publicBase),
+    );
+    flashCopied();
   };
 
   const enterFolder = (f: string) => {
     setFolder(f);
     setSelected(new Set());
+    setInspected(null);
+    setFilter("");
   };
 
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: drag-drop is an enhancement; the Upload button is the accessible path
+    // biome-ignore lint/a11y/noStaticElementInteractions: drag-drop and marquee are enhancements; buttons remain the accessible path
     <div
-      className="relative flex-1 overflow-y-auto p-8 pb-28"
+      className="relative flex-1 touch-none select-none overflow-y-auto p-8 pb-28"
+      {...marquee.handlers}
       onDragOver={(e) => {
         e.preventDefault();
         setDragging(true);
@@ -119,15 +108,22 @@ export default function Files() {
       onDrop={(e) => {
         e.preventDefault();
         setDragging(false);
-        upload.mutate([...e.dataTransfer.files]);
+        void collectDropped(e.dataTransfer).then((dropped) =>
+          uploads.enqueue(
+            dropped.map(({ file, dir }) => ({
+              file,
+              folder: dir ? `${uploadTarget}/${dir}` : uploadTarget,
+            })),
+          ),
+        );
       }}
     >
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <nav className="flex items-center gap-2 font-display text-lg">
           <button
             type="button"
             onClick={() => enterFolder("")}
-            className={folder ? "text-muted hover:text-ink" : "font-semibold"}
+            className={folder ? "text-muted transition-colors hover:text-ink" : "font-semibold"}
           >
             files
           </button>
@@ -137,8 +133,28 @@ export default function Files() {
               <span className="font-semibold">{folder}</span>
             </>
           )}
+          {visible.length > 0 && (
+            <span className="ml-2 rounded-none bg-panel-2 px-2 py-0.5 text-xs text-muted">
+              {visible.length}
+            </span>
+          )}
         </nav>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {visible.length > 0 && (
+            <Button
+              onClick={() =>
+                setSelected(allSelected ? new Set() : new Set(visible.map((o) => o.key)))
+              }
+            >
+              {allSelected ? "Clear selection" : "Select all"}
+            </Button>
+          )}
+          <input
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            placeholder="filter…"
+            className="w-36 rounded-none border border-line bg-panel px-3 py-1.5 font-mono text-sm transition-[width] placeholder:text-muted focus:w-52"
+          />
           {!folder &&
             (newFolderOpen ? (
               <form
@@ -160,7 +176,7 @@ export default function Files() {
                   onChange={(e) => setNewFolderName(e.target.value)}
                   onKeyDown={(e) => e.key === "Escape" && setNewFolderOpen(false)}
                   placeholder="folder-name"
-                  className="w-40 rounded-lg border border-line bg-panel px-3 py-1.5 font-mono text-sm placeholder:text-muted"
+                  className="w-40 rounded-none border border-line bg-panel px-3 py-1.5 font-mono text-sm placeholder:text-muted"
                 />
                 <Button variant="primary" type="submit">
                   Go
@@ -178,36 +194,26 @@ export default function Files() {
             multiple
             className="hidden"
             onChange={(e) => {
-              if (e.target.files?.length) upload.mutate([...e.target.files]);
+              if (e.target.files?.length)
+                uploads.enqueue(
+                  [...e.target.files].map((file) => ({ file, folder: uploadTarget })),
+                );
               e.target.value = "";
             }}
           />
         </div>
       </div>
 
-      {progress && (
-        <p className="mt-3 text-sm text-honey">
-          Uploading {progress.done}/{progress.total}…
-        </p>
-      )}
-      {failures.length > 0 && (
-        <div className="mt-3 rounded-lg border border-[rgba(255,110,110,0.35)] bg-[rgba(255,110,110,0.06)] px-3 py-2 text-sm text-danger">
-          {failures.map((f) => (
-            <p key={f}>{f}</p>
-          ))}
-        </div>
-      )}
-
-      {!folder && folders.length > 0 && (
+      {!folder && (data?.folders.length ?? 0) > 0 && (
         <div className="mt-6 flex flex-wrap gap-2">
-          {folders.map((f) => (
+          {data?.folders.map((f) => (
             <button
               key={f}
               type="button"
               onClick={() => enterFolder(f)}
-              className="group flex items-center gap-2 rounded-xl border border-line bg-panel px-4 py-2.5 transition-colors hover:border-[rgba(255,178,86,0.4)]"
+              className="flex items-center gap-2 rounded-none border border-line bg-panel px-4 py-2.5 transition-colors hover:border-[rgba(255,178,86,0.4)]"
             >
-              <span className="text-honey">▸</span>
+              <Folder size={15} className="text-honey" />
               <span className="font-display text-sm">{f}</span>
             </button>
           ))}
@@ -215,136 +221,61 @@ export default function Files() {
       )}
 
       {isLoading ? (
-        <p className="mt-10 text-sm text-muted">Loading…</p>
+        <SkeletonGrid />
       ) : visible.length === 0 ? (
         <div className="mt-6">
           <Empty
-            title={folder ? `${folder} is empty` : "No files yet"}
-            hint="Drop files anywhere in this window, or use Upload. Files get a public URL immediately."
+            title={
+              filter
+                ? `Nothing matches "${filter}"`
+                : folder
+                  ? `${folder} is empty`
+                  : "No files yet"
+            }
+            hint="Drop files or folders anywhere in this window, or use Upload. Files get a public URL immediately."
           />
         </div>
       ) : (
-        <div className="mt-6 grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3">
-          {visible.map((o) => {
-            const isSel = selected.has(o.key);
-            const isImage = o.contentType.startsWith("image/");
-            return (
-              <div
-                key={o.key}
-                className={`group relative overflow-hidden rounded-xl border bg-panel transition-colors ${
-                  isSel ? "border-honey" : "border-line hover:border-[rgba(255,255,255,0.2)]"
-                }`}
-              >
-                <button
-                  type="button"
-                  onClick={() => toggle(o.key)}
-                  className="block w-full text-left"
-                >
-                  <div className="flex h-32 items-center justify-center bg-panel-2">
-                    {isImage ? (
-                      <img
-                        src={o.url}
-                        alt={basename(o.key)}
-                        loading="lazy"
-                        className="h-full w-full object-contain p-2"
-                      />
-                    ) : (
-                      <span className="font-mono text-xs uppercase text-muted">
-                        {basename(o.key).split(".").pop()}
-                      </span>
-                    )}
-                  </div>
-                  <div className="border-t border-line p-3">
-                    <p className="truncate font-mono text-xs">{basename(o.key)}</p>
-                    <p className="mt-1 text-xs text-muted">{fmtSize(o.size)}</p>
-                  </div>
-                </button>
-                <div
-                  className={`absolute left-2 top-2 flex h-5 w-5 items-center justify-center rounded-md border text-xs transition-opacity ${
-                    isSel
-                      ? "border-honey bg-honey text-honey-ink opacity-100"
-                      : "border-line bg-bg opacity-0 group-hover:opacity-100"
-                  }`}
-                >
-                  {isSel ? "✓" : ""}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => navigator.clipboard.writeText(o.url)}
-                  title="Copy public URL"
-                  className="absolute right-2 top-2 rounded-md border border-line bg-bg px-2 py-0.5 font-mono text-[10px] text-muted opacity-0 transition-opacity hover:text-ink group-hover:opacity-100"
-                >
-                  copy url
-                </button>
-              </div>
-            );
-          })}
+        <div className="mt-6 grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-3">
+          {visible.map((o) => (
+            <div key={o.key} data-key={o.key}>
+              <FileCard
+                object={o}
+                selected={selected.has(o.key)}
+                onToggle={() => toggle(o.key)}
+                onInspect={() => setInspected(o)}
+                onCopied={flashCopied}
+              />
+            </div>
+          ))}
         </div>
       )}
 
       {selectedObjects.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-line bg-panel-2 p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.5)]">
-          <span className="px-3 font-display text-sm">{selectedObjects.length} selected</span>
-          <span className="mr-1 text-xs text-muted">copy as</span>
-          {(
-            [
-              ["newline", "urls"],
-              ["json", "json"],
-              ["ts", "ts const"],
-              ["manifest", "manifest url"],
-            ] as const
-          ).map(([fmt, label]) => (
-            <button
-              key={fmt}
-              type="button"
-              onClick={() => copy(fmt)}
-              className="rounded-lg px-2.5 py-1.5 font-mono text-xs text-ink transition-colors hover:bg-[rgba(255,178,86,0.15)]"
-            >
-              {label}
-            </button>
-          ))}
-          <div className="mx-1 h-5 w-px bg-line" />
-          {confirmingDelete ? (
-            <>
-              <button
-                type="button"
-                onClick={() => {
-                  remove.mutate([...selected]);
-                  setConfirmingDelete(false);
-                }}
-                className="rounded-lg bg-[rgba(255,110,110,0.15)] px-2.5 py-1.5 font-mono text-xs text-danger"
-              >
-                confirm — urls will 404
-              </button>
-              <button
-                type="button"
-                onClick={() => setConfirmingDelete(false)}
-                className="rounded-lg px-2.5 py-1.5 font-mono text-xs text-muted hover:text-ink"
-              >
-                cancel
-              </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setConfirmingDelete(true)}
-              className="rounded-lg px-2.5 py-1.5 font-mono text-xs text-danger transition-colors hover:bg-[rgba(255,110,110,0.12)]"
-            >
-              delete
-            </button>
-          )}
-          {copied && <span className="px-2 text-xs text-ok">copied</span>}
-        </div>
+        <SelectionPill
+          count={selectedObjects.length}
+          copied={copied}
+          onCopy={copy}
+          onDelete={() => remove.mutate([...selected])}
+        />
       )}
 
-      {dragging && (
-        <div className="pointer-events-none fixed inset-0 z-30 flex items-center justify-center bg-[rgba(13,15,20,0.85)]">
-          <div className="rounded-2xl border-2 border-dashed border-honey px-16 py-12 text-center">
-            <p className="font-display text-xl font-semibold">
-              Drop to upload to <span className="text-honey">{uploadTarget}/</span>
-            </p>
-          </div>
-        </div>
+      {inspected && (
+        <InspectorDrawer
+          object={inspected}
+          onClose={() => setInspected(null)}
+          onCopied={flashCopied}
+          onDelete={() => remove.mutate([inspected.key])}
+        />
+      )}
+
+      <UploadTray items={uploads.items} active={uploads.active} onDismiss={uploads.dismiss} />
+      {dragging && <DropOverlay target={uploadTarget} />}
+      {marquee.rect && (
+        <div
+          className="pointer-events-none fixed z-10 rounded-none border border-honey bg-[rgba(255,178,86,0.1)]"
+          style={marquee.rect}
+        />
       )}
     </div>
   );

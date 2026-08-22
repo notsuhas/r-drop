@@ -7,16 +7,15 @@ export default function Login() {
   const error = new URLSearchParams(window.location.search).get("error");
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg">
-      <div className="w-full max-w-sm rounded-2xl border border-line bg-panel p-8">
+      <div className="w-full max-w-sm rounded-none border border-line bg-panel p-8">
         <div className="font-display text-2xl font-bold tracking-tight">
-          ho<span className="text-honey">·</span>drops
+          ho<span className="text-honey">·</span>drive
         </div>
         <p className="mt-2 text-sm text-muted">
-          Asset drive for theclau.de. Invite-only — sign in with the Google account that was
-          invited.
+          Invite-only asset drive. Sign in with the Google account that was invited.
         </p>
         {error && ERROR_COPY[error] && (
-          <p className="mt-4 rounded-lg border border-[rgba(255,110,110,0.35)] bg-[rgba(255,110,110,0.06)] px-3 py-2 text-sm text-danger">
+          <p className="mt-4 rounded-none border border-[rgba(255,110,110,0.35)] bg-[rgba(255,110,110,0.06)] px-3 py-2 text-sm text-danger">
             {ERROR_COPY[error]}
           </p>
         )}
@@ -25,7 +24,7 @@ export default function Login() {
           onClick={() => {
             window.location.href = "/api/auth/login";
           }}
-          className="mt-8 flex w-full items-center justify-center gap-3 rounded-xl bg-honey px-4 py-3 font-display font-semibold text-honey-ink transition-transform hover:brightness-105 active:scale-[0.99]"
+          className="mt-8 flex w-full items-center justify-center gap-3 rounded-none bg-honey px-4 py-3 font-display font-semibold text-honey-ink transition-transform hover:brightness-105 active:scale-[0.99]"
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
             <path
@@ -50,9 +49,6 @@ export default function Login() {
           </svg>
           Continue with Google
         </button>
-        <p className="mt-4 text-center text-xs text-muted">
-          Public assets live at <span className="font-mono">ho-drops.theclau.de</span>
-        </p>
       </div>
     </div>
   );

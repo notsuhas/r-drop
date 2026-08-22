@@ -5,7 +5,7 @@
   --color-bg: rgba(13, 15, 20, 1);
   --color-panel: rgba(20, 23, 31, 1);
   --color-panel-2: rgba(28, 32, 43, 1);
-  --color-line: rgba(255, 255, 255, 0.08);
+  --color-line: rgba(255, 255, 255, 0.16);
   --color-ink: rgba(233, 236, 243, 1);
   --color-muted: rgba(150, 158, 175, 1);
   --color-honey: rgba(255, 178, 86, 1);
@@ -16,26 +16,20 @@
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 }
 
-body {
-  background: rgba(13, 15, 20, 1);
-  color: rgba(233, 236, 243, 1);
-  font-family: ui-sans-serif, system-ui, sans-serif;
-}
-
-::selection {
-  background: rgba(255, 178, 86, 0.3);
-}
-
-:focus-visible {
-  outline: 2px solid rgba(255, 178, 86, 1);
-  outline-offset: 2px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation: none !important;
-    transition: none !important;
+@layer base {
+  ::selection {
+    background: rgba(255, 178, 86, 0.3);
+  }
+  :focus-visible {
+    outline: 2px solid rgba(255, 178, 86, 1);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation: none !important;
+      transition: none !important;
+    }
   }
 }

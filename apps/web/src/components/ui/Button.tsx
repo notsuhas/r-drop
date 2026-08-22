@@ -19,7 +19,7 @@ export default function Button(props: IButton) {
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`rounded-lg px-3 py-1.5 font-display text-sm transition-colors active:scale-[0.99] disabled:opacity-40 ${styles[variant]}`}
+      className={`px-3 py-1.5 font-display text-xs font-semibold uppercase tracking-wider transition-all active:translate-x-[1px] active:translate-y-[1px] disabled:opacity-40 ${styles[variant]}`}
     >
       {children}
     </button>

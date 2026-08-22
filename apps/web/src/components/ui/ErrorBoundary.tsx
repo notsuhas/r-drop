@@ -26,7 +26,7 @@ export default class ErrorBoundary extends Component<IErrorBoundary, IErrorBound
         <button
           type="button"
           onClick={() => window.location.reload()}
-          className="rounded-lg border border-line bg-panel-2 px-3 py-1.5 font-display text-sm"
+          className=" rounded-none border border-line bg-panel-2 px-3 py-1.5 font-display text-sm"
         >
           Reload
         </button>

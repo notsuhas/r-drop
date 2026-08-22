@@ -1,4 +1,5 @@
 import { LogOut } from "lucide-react";
+import { Link, useLocation } from "wouter";
 
 interface ISidebarUser {
   name?: string;
@@ -7,31 +8,36 @@ interface ISidebarUser {
 }
 
 interface ISidebar {
-  tabs: { id: string; label: string }[];
-  activeTab: string;
-  onSelectTab: (id: string) => void;
+  isAdmin: boolean;
   user: ISidebarUser;
 }
 
 export default function Sidebar(props: ISidebar) {
-  const { tabs, activeTab, onSelectTab, user } = props;
+  const { isAdmin, user } = props;
+  const [location] = useLocation();
+
+  const tabs = [
+    { href: "/", label: "Files", active: location === "/" || location.startsWith("/f/") },
+    { href: "/tokens", label: "API tokens", active: location === "/tokens" },
+    ...(isAdmin ? [{ href: "/invites", label: "Invites", active: location === "/invites" }] : []),
+  ];
+
   return (
     <aside className="flex w-56 shrink-0 flex-col border-r border-line bg-panel">
-      <div className="px-5 py-6 font-display text-lg font-bold tracking-tight">
+      <Link href="/" className="px-5 py-6 font-display text-lg font-bold tracking-tight">
         ho<span className="text-honey">·</span>drive
-      </div>
+      </Link>
       <nav className="flex flex-col gap-1 px-3">
         {tabs.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => onSelectTab(t.id)}
-            className={` rounded-none px-3 py-2 text-left font-display text-sm transition-colors ${
-              activeTab === t.id ? "bg-panel-2 font-semibold text-ink" : "text-muted hover:text-ink"
+          <Link
+            key={t.href}
+            href={t.href}
+            className={`px-3 py-2 text-left font-display text-sm transition-colors ${
+              t.active ? "bg-panel-2 font-semibold text-ink" : "text-muted hover:text-ink"
             }`}
           >
             {t.label}
-          </button>
+          </Link>
         ))}
       </nav>
       <div className="mt-auto border-t border-line p-4">

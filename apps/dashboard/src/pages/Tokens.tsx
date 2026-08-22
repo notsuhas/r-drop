@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import Button from "../components/ui/Button";
 import Empty from "../components/ui/Empty";
-import { buildAgentPrompt } from "../lib/agentPrompt";
+import { buildAgentSkill } from "../lib/agentSkill";
 import { api } from "../lib/api";
 import { getConfig } from "../lib/config";
 
@@ -60,13 +60,13 @@ export default function Tokens() {
         onClick={async () => {
           const { publicBase } = await getConfig();
           await navigator.clipboard.writeText(
-            buildAgentPrompt({ publicBase, appBase: window.location.origin }),
+            buildAgentSkill({ publicBase, appBase: window.location.origin }),
           );
           flash("prompt");
         }}
         className="mt-3 text-xs text-muted underline-offset-2 hover:text-ink hover:underline"
       >
-        Copy agent prompt without a token (expects HO_DRIVE_TOKEN in the agent's env)
+        Copy agent skill without a token (reads HO_DRIVE_TOKEN from the agent's env)
       </button>
 
       {fresh && (
@@ -92,15 +92,15 @@ export default function Tokens() {
               onClick={async () => {
                 const { publicBase } = await getConfig();
                 await navigator.clipboard.writeText(
-                  buildAgentPrompt({ publicBase, appBase: window.location.origin, token: fresh }),
+                  buildAgentSkill({ publicBase, appBase: window.location.origin, token: fresh }),
                 );
                 flash("prompt");
               }}
             >
-              Copy agent prompt
+              Copy agent skill
             </Button>
             <span className="text-xs text-muted">
-              full instructions + this token — paste straight into your agent
+              SKILL.md with this token — save as ~/.claude/skills/ho-drive/SKILL.md
             </span>
           </div>
           {copiedWhat && <p className="mt-2 text-xs text-ok">copied {copiedWhat}</p>}

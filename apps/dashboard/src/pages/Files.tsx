@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Folder } from "lucide-react";
+import { Folder, LayoutGrid, List } from "lucide-react";
 import { useCallback, useMemo, useRef, useState } from "react";
+import { useLocation } from "wouter";
 import DropOverlay from "../components/files/DropOverlay";
 import FileCard from "../components/files/FileCard";
 import InspectorDrawer from "../components/files/InspectorDrawer";
+import ListView, { type SortKey } from "../components/files/ListView";
 import SelectionPill from "../components/files/SelectionPill";
 import UploadTray from "../components/files/UploadTray";
 import Button from "../components/ui/Button";
@@ -18,7 +20,8 @@ import { basename } from "../lib/format";
 import { type CopyFormat, formatLinks } from "../lib/links";
 
 export default function Files() {
-  const [folder, setFolder] = useState("");
+  const [location, navigate] = useLocation();
+  const folder = location.startsWith("/f/") ? decodeURIComponent(location.slice(3)) : "";
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [inspected, setInspected] = useState<IObject | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -26,6 +29,11 @@ export default function Files() {
   const [filter, setFilter] = useState("");
   const [newFolderOpen, setNewFolderOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
+  const [view, setView] = useState<"grid" | "list">(
+    (localStorage.getItem("ho-drive:view") as "grid" | "list") ?? "grid",
+  );
+  const [sortKey, setSortKey] = useState<SortKey>("uploaded");
+  const [sortAsc, setSortAsc] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const qc = useQueryClient();
 
@@ -37,6 +45,17 @@ export default function Files() {
   const uploadTarget = folder || "scratch";
   const invalidate = useCallback(() => qc.invalidateQueries({ queryKey: ["objects"] }), [qc]);
   const uploads = useUploads(invalidate);
+
+  const { data: rootListing } = useQuery({
+    queryKey: ["objects", ""],
+    queryFn: () => api.objects(""),
+  });
+
+  const rename = useMutation({
+    mutationFn: ({ key, newKey }: { key: string; newKey: string }) => api.renameObject(key, newKey),
+    onSuccess: () => setInspected(null),
+    onSettled: invalidate,
+  });
 
   const remove = useMutation({
     mutationFn: async (keys: string[]) => {
@@ -50,11 +69,16 @@ export default function Files() {
   });
 
   const visible = useMemo(() => {
-    const objects = [...(data?.objects ?? [])].sort((a, b) => b.uploaded.localeCompare(a.uploaded));
+    const dir = sortAsc ? 1 : -1;
+    const objects = [...(data?.objects ?? [])].sort((a, b) => {
+      if (sortKey === "size") return (a.size - b.size) * dir;
+      if (sortKey === "name") return basename(a.key).localeCompare(basename(b.key)) * dir;
+      return a.uploaded.localeCompare(b.uploaded) * dir;
+    });
     if (!filter) return objects;
     const q = filter.toLowerCase();
     return objects.filter((o) => basename(o.key).toLowerCase().includes(q));
-  }, [data, filter]);
+  }, [data, filter, sortKey, sortAsc]);
 
   const selectedObjects = visible.filter((o) => selected.has(o.key));
   const allSelected = visible.length > 0 && selectedObjects.length === visible.length;
@@ -87,10 +111,23 @@ export default function Files() {
   };
 
   const enterFolder = (f: string) => {
-    setFolder(f);
+    navigate(f ? `/f/${encodeURIComponent(f)}` : "/");
     setSelected(new Set());
     setInspected(null);
     setFilter("");
+  };
+
+  const setViewMode = (v: "grid" | "list") => {
+    setView(v);
+    localStorage.setItem("ho-drive:view", v);
+  };
+
+  const onSort = (key: SortKey) => {
+    if (key === sortKey) setSortAsc((a) => !a);
+    else {
+      setSortKey(key);
+      setSortAsc(key === "name");
+    }
   };
 
   return (
@@ -149,6 +186,26 @@ export default function Files() {
               {allSelected ? "Clear selection" : "Select all"}
             </Button>
           )}
+          <div className="flex border border-line">
+            {(
+              [
+                ["grid", LayoutGrid],
+                ["list", List],
+              ] as const
+            ).map(([mode, Icon]) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setViewMode(mode)}
+                aria-label={`${mode} view`}
+                className={`px-2.5 py-1.5 transition-colors ${
+                  view === mode ? "bg-panel-2 text-honey" : "text-muted hover:text-ink"
+                }`}
+              >
+                <Icon size={15} />
+              </button>
+            ))}
+          </div>
           <input
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
@@ -235,6 +292,16 @@ export default function Files() {
             hint="Drop files or folders anywhere in this window, or use Upload. Files get a public URL immediately."
           />
         </div>
+      ) : view === "list" ? (
+        <ListView
+          objects={visible}
+          selected={selected}
+          sortKey={sortKey}
+          sortAsc={sortAsc}
+          onSort={onSort}
+          onToggle={toggle}
+          onInspect={setInspected}
+        />
       ) : (
         <div className="mt-6 grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-3">
           {visible.map((o) => (
@@ -263,9 +330,11 @@ export default function Files() {
       {inspected && (
         <InspectorDrawer
           object={inspected}
+          folders={rootListing?.folders ?? []}
           onClose={() => setInspected(null)}
           onCopied={flashCopied}
           onDelete={() => remove.mutate([inspected.key])}
+          onRename={(newKey) => rename.mutate({ key: inspected.key, newKey })}
         />
       )}
 

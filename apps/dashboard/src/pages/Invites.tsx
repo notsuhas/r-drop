@@ -6,6 +6,7 @@ import { api } from "../lib/api";
 
 export default function Invites() {
   const [email, setEmail] = useState("");
+  const [confirming, setConfirming] = useState<string | null>(null);
   const qc = useQueryClient();
   const { data, isLoading } = useQuery({ queryKey: ["invites"], queryFn: api.invites });
 
@@ -65,15 +66,31 @@ export default function Invites() {
                     : "not signed in yet"}
                 </p>
               </div>
-              {inv.usedAt ? (
-                <span className=" rounded-none bg-[rgba(97,214,155,0.12)] px-2 py-0.5 text-xs text-ok">
-                  active
-                </span>
-              ) : (
-                <Button variant="danger" onClick={() => remove.mutate(inv.email)}>
-                  Revoke
-                </Button>
-              )}
+              <div className="flex items-center gap-2">
+                {inv.usedAt && (
+                  <span className="bg-[rgba(97,214,155,0.12)] px-2 py-0.5 text-xs text-ok">
+                    active
+                  </span>
+                )}
+                {confirming === inv.email ? (
+                  <>
+                    <Button
+                      variant="danger"
+                      onClick={() => {
+                        remove.mutate(inv.email);
+                        setConfirming(null);
+                      }}
+                    >
+                      {inv.usedAt ? "Confirm — deletes user + tokens" : "Confirm revoke"}
+                    </Button>
+                    <Button onClick={() => setConfirming(null)}>Cancel</Button>
+                  </>
+                ) : (
+                  <Button variant="danger" onClick={() => setConfirming(inv.email)}>
+                    {inv.usedAt ? "Remove" : "Revoke"}
+                  </Button>
+                )}
+              </div>
             </div>
           ))}
         </div>

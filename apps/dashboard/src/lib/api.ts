@@ -61,6 +61,12 @@ export const api = {
   },
   deleteObject: (key: string) =>
     req<{ deleted: string }>(`/api/objects/${key}`, { method: "DELETE" }),
+  renameObject: (key: string, newKey: string) =>
+    req<{ key: string; url: string }>("/api/objects/rename", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ key, newKey }),
+    }),
   invites: () => req<IInvite[]>("/api/invites"),
   addInvite: (email: string) =>
     req<{ email: string }>("/api/invites", {

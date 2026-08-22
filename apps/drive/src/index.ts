@@ -1,10 +1,14 @@
 import { Hono } from "hono";
 import { workosConfigured } from "./auth";
 import { auth } from "./routes/auth";
+import { config } from "./routes/config";
 import { invites } from "./routes/invites";
+import { landing } from "./routes/landing";
+import { manifest } from "./routes/manifest";
 import { me } from "./routes/me";
 import { objects } from "./routes/objects";
 import { tokens } from "./routes/tokens";
+import { upload } from "./routes/upload";
 import type { Env } from "./types";
 
 const app = new Hono<Env>()
@@ -22,7 +26,11 @@ const app = new Hono<Env>()
   })
   .route("/api", auth)
   .route("/api", me)
+  .route("/", landing)
+  .route("/api", config)
   .route("/api", objects)
+  .route("/api", upload)
+  .route("/api", manifest)
   .route("/api", invites)
   .route("/api", tokens);
 

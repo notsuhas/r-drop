@@ -1,9 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { slugify, camelCase, cleanFolder, isReservedKey } from "../src/lib/keys";
-import { buildManifest } from "../src/lib/manifest";
+import { camelCase, cleanFolder, isReservedKey, slugify } from "../keys";
+import { buildManifest } from "../manifest";
 
 describe("slugify", () => {
-  test("lowercases and dashes", () => expect(slugify("Hero Banner v2.PNG")).toBe("hero-banner-v2.png"));
+  test("lowercases and dashes", () =>
+    expect(slugify("Hero Banner v2.PNG")).toBe("hero-banner-v2.png"));
   test("empty base falls back", () => expect(slugify("???.png")).toBe("file.png"));
   test("no extension", () => expect(slugify("My File")).toBe("my-file"));
   test("dotfile treated as extensionless", () => expect(slugify(".env")).toBe("env"));

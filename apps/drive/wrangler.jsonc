@@ -4,13 +4,14 @@
   "compatibility_date": "2026-08-01",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
+    "binding": "ASSETS",
     "directory": "../web/dist",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*"]
+    "run_worker_first": ["/api/*", "/"]
   },
   "vars": {
-    "PUBLIC_BASE": "https://ho-drops.theclau.de",
-    "ADMIN_EMAIL": "suhas.siriprole@gmail.com",
+    "PUBLIC_BASE": "https://ho-drive-cdn.theclau.de",
+    "ADMIN_EMAILS": "suhas.siriprole@gmail.com,suhas.siriprole@headout.com",
     "APP_BASE": "https://ho-drive.theclau.de"
   },
   "r2_buckets": [
@@ -20,6 +21,7 @@
     { "binding": "DB", "database_name": "drive-db", "database_id": "88157903-0c71-4cd6-8b4a-e142bee2436e" }
   ],
   "routes": [
-    { "pattern": "ho-drive.theclau.de", "custom_domain": true }
+    { "pattern": "ho-drive.theclau.de", "custom_domain": true },
+    { "pattern": "ho-drive-cdn.theclau.de/", "zone_name": "theclau.de" }
   ]
 }

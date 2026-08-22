@@ -7,7 +7,10 @@ import type { Env } from "./types";
 export const SESSION_COOKIE = "hod_session";
 
 export const isAdminEmail = (env: Bindings, email: string) =>
-  email.toLowerCase() === env.ADMIN_EMAIL.toLowerCase();
+  env.ADMIN_EMAILS.toLowerCase()
+    .split(",")
+    .map((e) => e.trim())
+    .includes(email.toLowerCase());
 
 export const workosConfigured = (env: Bindings) =>
   Boolean(env.WORKOS_API_KEY && env.WORKOS_CLIENT_ID);

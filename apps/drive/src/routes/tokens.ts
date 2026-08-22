@@ -3,7 +3,7 @@ import { drizzle } from "drizzle-orm/d1";
 import type { Context } from "hono";
 import { Hono } from "hono";
 import * as schema from "../db/schema";
-import { sha256 } from "../lib/crypto";
+import { sha256 } from "hono/utils/crypto";
 import { readJson } from "../lib/json";
 import { requireAuth } from "../middleware/auth";
 import type { Env } from "../types";
@@ -42,7 +42,7 @@ export const tokens = new Hono<Env>()
     await db.insert(schema.apiTokens).values({
       id: crypto.randomUUID(),
       name,
-      hash: await sha256(token),
+      hash: (await sha256(token)) ?? "",
       userId: actor.userId,
       prefix: token.slice(0, 8),
       scope,

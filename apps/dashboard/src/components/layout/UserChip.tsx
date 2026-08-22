@@ -1,5 +1,6 @@
-import { LogOut, User } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useCallback } from "react";
+import Avatar from "@/components/ui/Avatar";
 import Menu from "@/components/ui/Menu";
 import { useMenu } from "@/hooks/useMenu";
 import { api } from "@/lib/api";
@@ -11,23 +12,6 @@ interface IUserChip {
   picture?: string | null;
   /** Rail mode: avatar only. */
   collapsed?: boolean;
-}
-
-function Avatar(props: { picture?: string | null }) {
-  if (props.picture)
-    return (
-      <img
-        src={props.picture}
-        alt=""
-        referrerPolicy="no-referrer"
-        className="h-7 w-7 shrink-0 rounded-full object-cover"
-      />
-    );
-  return (
-    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface-3 text-ink-3">
-      <User size={14} />
-    </span>
-  );
 }
 
 export default function UserChip(props: IUserChip) {
@@ -53,7 +37,7 @@ export default function UserChip(props: IUserChip) {
           collapsed ? "justify-center p-1" : "p-1.5",
         )}
       >
-        <Avatar picture={picture} />
+        <Avatar picture={picture} name={name} email={email} />
         {!collapsed && (
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-medium text-ink">{name ?? email}</span>

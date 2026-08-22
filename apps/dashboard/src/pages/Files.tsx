@@ -128,6 +128,7 @@ export default function Files() {
             onClearFilter={() => b.setFilter("")}
             onEnterFolder={b.enterFolder}
             onSelect={act.selectFromClick}
+            onToggleSelect={act.toggleFromCheckbox}
             onOpen={openObject}
             onInspect={openObject}
             onCopyUrl={act.copyOneUrl}

@@ -107,3 +107,32 @@ describe("modeFromEvent", () => {
   test("shift wins over meta", () =>
     expect(modeFromEvent({ ...base, shiftKey: true, metaKey: true })).toBe("range"));
 });
+
+describe("checkbox-driven selection", () => {
+  const ORDER = ["a", "b", "c", "d", "e"];
+
+  // The reported bug: ticking a checkbox replaced the selection instead of
+  // adding to it, so multi-select via the checkboxes was impossible.
+  test("ticking successive checkboxes accumulates", () => {
+    const { result } = renderHook(() => useSelection());
+    act(() => result.current.select("a", "toggle", ORDER));
+    act(() => result.current.select("c", "toggle", ORDER));
+    act(() => result.current.select("e", "toggle", ORDER));
+    expect([...result.current.selected].sort()).toEqual(["a", "c", "e"]);
+  });
+
+  test("select all, then untick a few, keeps the rest", () => {
+    const { result } = renderHook(() => useSelection());
+    act(() => result.current.selectExactly(ORDER));
+    act(() => result.current.select("b", "toggle", ORDER));
+    act(() => result.current.select("d", "toggle", ORDER));
+    expect([...result.current.selected].sort()).toEqual(["a", "c", "e"]);
+  });
+
+  test("shift-ticking a checkbox still extends a range", () => {
+    const { result } = renderHook(() => useSelection());
+    act(() => result.current.select("b", "toggle", ORDER));
+    act(() => result.current.select("d", "range", ORDER));
+    expect([...result.current.selected].sort()).toEqual(["b", "c", "d"]);
+  });
+});

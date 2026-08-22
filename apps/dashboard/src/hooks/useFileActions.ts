@@ -36,6 +36,16 @@ export function useFileActions(b: FileBrowser) {
     [select],
   );
 
+  /**
+   * Ticking a checkbox always adds or removes, never replaces — that is the
+   * whole point of the control, and it is what makes "select all, then untick
+   * a few" work. Shift still extends a range, as it does in Finder and Drive.
+   */
+  const toggleFromCheckbox = useCallback(
+    (key: string, event: React.MouseEvent) => select(key, event.shiftKey ? "range" : "toggle"),
+    [select],
+  );
+
   const copy = useCallback(
     (format: CopyFormat) => {
       void b
@@ -81,7 +91,7 @@ export function useFileActions(b: FileBrowser) {
     [b.rename.mutate, toast],
   );
 
-  return { enqueue, select, selectFromClick, copy, copyOneUrl, remove, rename };
+  return { enqueue, select, selectFromClick, toggleFromCheckbox, copy, copyOneUrl, remove, rename };
 }
 
 export type FileActions = ReturnType<typeof useFileActions>;

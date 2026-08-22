@@ -19,6 +19,7 @@ export default function FileGrid(props: IFileGrid) {
     focusKey,
     onEnterFolder,
     onSelect,
+    onToggleSelect,
     onOpen,
     onInspect,
     onCopyUrl,
@@ -56,6 +57,7 @@ export default function FileGrid(props: IFileGrid) {
                   selected={selected.has(o.key)}
                   focused={focusKey === o.key}
                   onSelect={(e) => onSelect(o.key, e)}
+                  onToggleSelect={(e) => onToggleSelect(o.key, e)}
                   onOpen={() => onOpen(o)}
                   onInspect={() => onInspect(o)}
                   onCopyUrl={() => onCopyUrl(o)}

@@ -11,12 +11,23 @@ function useLoopedRive(url: string, stateMachine?: string) {
 
   useEffect(() => {
     if (!rive) return;
+    // reset() can synchronously emit another Stop — restart async and guard
+    // re-entrancy, or the handler recurses into a stack overflow.
+    let restarting = false;
+    let cancelled = false;
     const restart = () => {
-      rive.reset();
-      rive.play();
+      if (restarting) return;
+      restarting = true;
+      requestAnimationFrame(() => {
+        if (!cancelled) rive.reset({ autoplay: true });
+        restarting = false;
+      });
     };
     rive.on(EventType.Stop, restart);
-    return () => rive.off(EventType.Stop, restart);
+    return () => {
+      cancelled = true;
+      rive.off(EventType.Stop, restart);
+    };
   }, [rive]);
 
   return { rive, RiveComponent };

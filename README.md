@@ -1,10 +1,10 @@
-# ho·drops
+# ho·drive
 
 Personal asset CDN. Upload throwaway feature-dev assets (Figma exports etc.), reference public URLs in app code instead of bundling.
 
 | Host | Purpose | Gated |
 |---|---|---|
-| `ho-drops.theclau.de` | R2 custom domain — public object reads, CDN-cached, immutable | no |
+| `ho-drive-cdn.theclau.de` | R2 custom domain (bucket `ho-drops`) — public object reads, CDN-cached, immutable | no |
 | `ho-drive.theclau.de` | Worker — dashboard + API | yes (Google session or bearer token) |
 
 ## Layout
@@ -31,8 +31,8 @@ curl -X POST https://ho-drive.theclau.de/api/upload \
 Folder manifest (public, no token, regenerated on every upload/delete):
 
 ```
-https://ho-drops.theclau.de/_manifest/<folder>.json
-# { "folder", "count", "assets": { "heroBanner": "https://ho-drops.theclau.de/..." } }
+https://ho-drive-cdn.theclau.de/_manifest/<folder>.json
+# { "folder", "count", "assets": { "heroBanner": "https://ho-drive-cdn.theclau.de/..." } }
 ```
 
 ## Dev

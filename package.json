@@ -12,7 +12,8 @@
     "db:generate": "cd apps/api && bunx drizzle-kit generate",
     "db:migrate": "bunx wrangler d1 migrations apply drive-db --local",
     "test": "cd apps/api && bun test && cd ../dashboard && bun test",
-    "lint": "bunx biome check ."
+    "lint": "bunx biome check .",
+    "clean": "git clean -Xdf -e '!wrangler.jsonc' -e '!.dev.vars'"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.10",

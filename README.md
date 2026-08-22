@@ -89,6 +89,8 @@ bun run dev          # wrangler dev with local D1/R2
 
 Quality gates (all must pass — CI is just these four commands):
 
+`bun run clean` wipes everything gitignored (node_modules, caches, builds) except the instance files `wrangler.jsonc` / `.dev.vars`.
+
 ```bash
 bunx biome check .        # lint + format
 bunx tsc --noEmit -p apps/api && (cd apps/dashboard && bunx tsc -b)

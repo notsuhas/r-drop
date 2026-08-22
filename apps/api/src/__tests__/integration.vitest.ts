@@ -170,13 +170,18 @@ describe("objects", () => {
     expect(body.objects[0].contentType).toBe("image/png");
   });
 
-  it("root listing hides the _manifest folder", async () => {
-    await upload(WRITE_TOKEN, "checkout-v2", "a.png");
+  it("root listing hides the _manifest namespace and reports folder sizes", async () => {
+    await upload(WRITE_TOKEN, "checkout-v2", "a.png", "seven77");
+    await upload(WRITE_TOKEN, "checkout-v2", "b.png", "four");
     const res = await SELF.fetch(`${APP}/api/objects?prefix=`, {
       headers: { authorization: `Bearer ${WRITE_TOKEN}` },
     });
-    const body = (await res.json()) as { folders: string[] };
-    expect(body.folders).toEqual(["checkout-v2"]);
+    const body = (await res.json()) as {
+      folders: { name: string; size: number }[];
+      totalSize: number;
+    };
+    expect(body.folders).toEqual([{ name: "checkout-v2", size: 11 }]);
+    expect(body.totalSize).toBe(11);
   });
 
   it("delete removes the object and empties the manifest", async () => {

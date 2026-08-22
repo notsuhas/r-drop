@@ -44,7 +44,8 @@ export function useObjectListing(
     visible,
     isLoading,
     folders: data?.folders ?? [],
-    rootFolders: rootListing?.folders ?? [],
+    rootFolders: rootListing?.folders.map((f) => f.name) ?? [],
+    totalSize: data?.totalSize ?? 0,
     invalidate,
   };
 }

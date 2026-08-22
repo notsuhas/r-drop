@@ -33,6 +33,7 @@ export default function Files() {
       <FilesToolbar
         folder={b.folder}
         count={b.visible.length}
+        totalSize={b.totalSize}
         uploadTarget={b.uploadTarget}
         allSelected={b.allSelected}
         hasFiles={b.visible.length > 0}

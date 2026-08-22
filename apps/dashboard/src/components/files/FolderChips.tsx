@@ -1,8 +1,9 @@
 import { Folder, FolderPlus } from "lucide-react";
 import { normalizeFolderName } from "@/lib/folder-name";
+import { fmtSize } from "@/lib/format";
 
 interface IFolderChips {
-  folders: string[];
+  folders: { name: string; size: number }[];
   parent: string;
   drafting: boolean;
   onEnter: (folder: string) => void;
@@ -42,13 +43,14 @@ export default function FolderChips(props: IFolderChips) {
       )}
       {folders.map((f) => (
         <button
-          key={f}
+          key={f.name}
           type="button"
-          onClick={() => onEnter(f)}
+          onClick={() => onEnter(f.name)}
           className="flex items-center gap-2 border border-line bg-panel px-4 py-2.5 transition-colors hover:border-[rgba(255,178,86,0.4)]"
         >
           <Folder size={15} className="text-honey" />
-          <span className="font-display text-sm">{label(f, parent)}</span>
+          <span className="font-display text-sm">{label(f.name, parent)}</span>
+          <span className="text-xs text-muted">{fmtSize(f.size)}</span>
         </button>
       ))}
     </div>

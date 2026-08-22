@@ -2,10 +2,12 @@ import { useRef } from "react";
 import ViewToggle from "@/components/files/ViewToggle";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import { fmtSize } from "@/lib/format";
 
 interface IFilesToolbar {
   folder: string;
   count: number;
+  totalSize: number;
   uploadTarget: string;
   allSelected: boolean;
   hasFiles: boolean;
@@ -23,6 +25,7 @@ export default function FilesToolbar(props: IFilesToolbar) {
   const {
     folder,
     count,
+    totalSize,
     uploadTarget,
     allSelected,
     hasFiles,
@@ -54,7 +57,9 @@ export default function FilesToolbar(props: IFilesToolbar) {
           </>
         )}
         {count > 0 && (
-          <span className="ml-2 bg-panel-2 px-2 py-0.5 text-xs text-muted">{count}</span>
+          <span className="ml-2 bg-panel-2 px-2 py-0.5 text-xs text-muted">
+            {count} · {fmtSize(totalSize)}
+          </span>
         )}
       </nav>
       <div className="flex flex-wrap items-center gap-2">

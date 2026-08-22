@@ -2,7 +2,7 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
-import { cleanFolder, folderOf, isReservedKey, RESERVED_PREFIX } from "@/lib/keys";
+import { cleanFolder, folderOf, isReservedKey } from "@/lib/keys";
 import { listAll, regenerateManifest } from "@/lib/manifest";
 import { resolveRenameTarget } from "@/lib/rename";
 import { requireAuth } from "@/middleware/auth";
@@ -11,23 +11,39 @@ import type { Env } from "@/types";
 export const objects = new Hono<Env>()
   .get("/objects", requireAuth(), async (c) => {
     const prefix = cleanFolder(c.req.query("prefix") ?? "");
-    const listed = await listAll(c.env.BUCKET, {
-      prefix: prefix ? `${prefix}/` : "",
-      delimiter: "/",
-    });
-    return c.json({
-      folders: listed.delimitedPrefixes
-        .map((p) => p.replace(/\/$/, ""))
-        .filter((p) => p !== RESERVED_PREFIX),
-      objects: listed.objects
-        .filter((o) => !isReservedKey(o.key))
-        .map((o) => ({
+    const basePrefix = prefix ? `${prefix}/` : "";
+    // One undelimited pass covers direct objects, child folders, and their
+    // recursive sizes without a listing per folder.
+    const listed = await listAll(c.env.BUCKET, { prefix: basePrefix });
+
+    const objects = [];
+    const folderSizes = new Map<string, number>();
+    let totalSize = 0;
+    for (const o of listed.objects) {
+      if (isReservedKey(o.key)) continue;
+      totalSize += o.size;
+      const rest = o.key.slice(basePrefix.length);
+      const slash = rest.indexOf("/");
+      if (slash === -1) {
+        objects.push({
           key: o.key,
           size: o.size,
           uploaded: o.uploaded.toISOString(),
           contentType: o.httpMetadata?.contentType ?? "",
           url: `${c.env.PUBLIC_BASE}/${o.key}`,
-        })),
+        });
+      } else {
+        const child = `${basePrefix}${rest.slice(0, slash)}`;
+        folderSizes.set(child, (folderSizes.get(child) ?? 0) + o.size);
+      }
+    }
+
+    return c.json({
+      folders: [...folderSizes.entries()]
+        .map(([name, size]) => ({ name, size }))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+      objects,
+      totalSize,
     });
   })
 

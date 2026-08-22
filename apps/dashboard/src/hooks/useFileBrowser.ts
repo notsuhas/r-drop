@@ -53,6 +53,7 @@ export function useFileBrowser() {
     uploadTarget,
     folders: listing.folders,
     rootFolders: listing.rootFolders,
+    totalSize: listing.totalSize,
     visible,
     isLoading: listing.isLoading,
     ...prefs,

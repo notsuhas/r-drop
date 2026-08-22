@@ -1,0 +1,21 @@
+{
+  // Test files are excluded from analysis (health/duplication noise there is
+  // acceptable); the two knobs below stop test-only usage from reading as dead.
+  // scripts/ holds manual asset tooling that is deliberately not reachable from
+  // an app entry point and is run ad hoc with npx, not from package.json.
+  "ignorePatterns": [
+    "**/__tests__/**",
+    "**/test-setup.ts",
+    "**/vitest.config.ts",
+    "apps/dashboard/scripts/**"
+  ],
+  // Exports like buildManifest / MAX_UPLOAD_BYTES are used in-file and by tests.
+  "ignoreExportsUsedInFile": true,
+  // Test-harness deps are only imported from ignored test files.
+  "ignoreDependencies": ["@cloudflare/vitest-pool-workers", "@happy-dom/global-registrator"],
+  "health": {
+    // No coverage data is fed to fallow, so CRAP scores are estimates; the
+    // real complexity gates are maxCyclomatic/maxCognitive defaults.
+    "maxCrap": 100
+  }
+}

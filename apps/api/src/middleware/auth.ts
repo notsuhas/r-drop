@@ -1,34 +1,51 @@
+// Two ways in: bearer token (agents) or WorkOS sealed-session cookie (humans).
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { createMiddleware } from "hono/factory";
 import { sha256 } from "hono/utils/crypto";
-import { getSessionUser, isAdminEmail } from "../auth";
+import type { Bindings } from "../bindings";
 import * as schema from "../db/schema";
-import type { Env } from "../types";
+import { isAdminEmail } from "../lib/admin";
+import { getSessionUser } from "../lib/session";
+import type { Actor, Env } from "../types";
 
 const TOKEN_FORMAT = /^hod_[a-f0-9]{32}$/;
+
+type BearerResult =
+  | { actor: Actor; touch: () => Promise<unknown> }
+  | { error: string; status: 401 | 403 };
+
+async function authenticateBearer(
+  env: Bindings,
+  bearer: string,
+  scope: "read" | "write",
+): Promise<BearerResult> {
+  if (!TOKEN_FORMAT.test(bearer)) return { error: "invalid token", status: 401 };
+  const db = drizzle(env.DB, { schema });
+  const hash = (await sha256(bearer)) ?? "";
+  const token = await db.query.apiTokens.findFirst({ where: eq(schema.apiTokens.hash, hash) });
+  if (!token) return { error: "invalid token", status: 401 };
+  if (scope === "write" && token.scope !== "write")
+    return { error: "insufficient scope", status: 403 };
+  return {
+    actor: { type: "token", userId: token.userId, tokenId: token.id },
+    touch: () =>
+      db
+        .update(schema.apiTokens)
+        .set({ lastUsedAt: Date.now() })
+        .where(eq(schema.apiTokens.id, token.id))
+        .run(),
+  };
+}
 
 export const requireAuth = (scope: "read" | "write" = "read") =>
   createMiddleware<Env>(async (c, next) => {
     const bearer = c.req.header("authorization")?.replace(/^Bearer\s+/i, "");
     if (bearer) {
-      if (!TOKEN_FORMAT.test(bearer)) return c.json({ error: "invalid token" }, 401);
-      const db = drizzle(c.env.DB, { schema });
-      const hash = (await sha256(bearer)) ?? "";
-      const token = await db.query.apiTokens.findFirst({
-        where: eq(schema.apiTokens.hash, hash),
-      });
-      if (!token) return c.json({ error: "invalid token" }, 401);
-      if (scope === "write" && token.scope !== "write")
-        return c.json({ error: "insufficient scope" }, 403);
-      c.executionCtx.waitUntil(
-        db
-          .update(schema.apiTokens)
-          .set({ lastUsedAt: Date.now() })
-          .where(eq(schema.apiTokens.id, token.id))
-          .run(),
-      );
-      c.set("actor", { type: "token", userId: token.userId, tokenId: token.id });
+      const result = await authenticateBearer(c.env, bearer, scope);
+      if ("error" in result) return c.json({ error: result.error }, result.status);
+      c.executionCtx.waitUntil(result.touch());
+      c.set("actor", result.actor);
       return next();
     }
     const session = await getSessionUser(c);

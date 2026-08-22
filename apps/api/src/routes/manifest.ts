@@ -1,3 +1,4 @@
+// Authenticated manifest read; regenerates before returning so it is never stale.
 import { Hono } from "hono";
 import { cleanFolder, isReservedKey } from "../lib/keys";
 import { regenerateManifest } from "../lib/manifest";

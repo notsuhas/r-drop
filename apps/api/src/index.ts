@@ -1,5 +1,6 @@
+// Worker entry: one Hono app serves the API, the dashboard (assets binding), and the CDN root landing.
 import { Hono } from "hono";
-import { workosConfigured } from "./auth";
+import { workosConfigured } from "./lib/workos";
 import { auth } from "./routes/auth";
 import { config } from "./routes/config";
 import { invites } from "./routes/invites";

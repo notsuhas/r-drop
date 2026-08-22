@@ -1,3 +1,4 @@
+// Folder manifests: public JSON indexes at _manifest/<folder>.json, regenerated on every write.
 import type { Bindings } from "../bindings";
 import { camelCase, RESERVED_PREFIX } from "./keys";
 

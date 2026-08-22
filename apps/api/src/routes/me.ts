@@ -1,5 +1,6 @@
+// Who am I: actor identity plus admin flag for the dashboard.
 import { Hono } from "hono";
-import { isAdminEmail } from "../auth";
+import { isAdminEmail } from "../lib/admin";
 import { requireAuth } from "../middleware/auth";
 import type { Env } from "../types";
 

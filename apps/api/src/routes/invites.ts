@@ -1,9 +1,11 @@
+import { zValidator } from "@hono/zod-validator";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
-import { getWorkos, isAdminEmail, workosConfigured } from "../auth";
+import { z } from "zod";
 import * as schema from "../db/schema";
-import { readJson } from "../lib/json";
+import { isAdminEmail } from "../lib/admin";
+import { getWorkos, workosConfigured } from "../lib/workos";
 import { requireAdmin, requireAuth } from "../middleware/auth";
 import type { Env } from "../types";
 
@@ -18,10 +20,9 @@ export const invites = new Hono<Env>()
     return c.json(await db.query.invites.findMany());
   })
 
-  .post("/invites", async (c) => {
-    const body = await readJson<{ email?: string }>(c);
-    const email = body?.email?.trim().toLowerCase();
-    if (!email || !EMAIL_FORMAT.test(email)) return c.json({ error: "invalid email" }, 400);
+  .post("/invites", zValidator("json", z.object({ email: z.string() })), async (c) => {
+    const email = c.req.valid("json").email.trim().toLowerCase();
+    if (!EMAIL_FORMAT.test(email)) return c.json({ error: "invalid email" }, 400);
     const db = drizzle(c.env.DB, { schema });
     const actor = c.get("actor");
     await db

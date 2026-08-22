@@ -1,14 +1,11 @@
+// WorkOS OAuth flow. The callback enforces the invite gate before any session is issued.
 import { and, eq, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
-import {
-  clearSessionCookie,
-  getSessionUser,
-  getWorkos,
-  isAdminEmail,
-  setSessionCookie,
-} from "../auth";
 import * as schema from "../db/schema";
+import { isAdminEmail } from "../lib/admin";
+import { clearSessionCookie, getSessionUser, setSessionCookie } from "../lib/session";
+import { getWorkos } from "../lib/workos";
 import type { Env } from "../types";
 
 export const auth = new Hono<Env>()

@@ -1,25 +1,18 @@
+// Multipart upload; objects are immutable and CDN-cached for a year.
 import { Hono } from "hono";
-import { cleanFolder, isReservedKey, RESERVED_PREFIX, slugify } from "../lib/keys";
+import { RESERVED_PREFIX } from "../lib/keys";
 import { regenerateManifest } from "../lib/manifest";
+import { resolveUpload } from "../lib/upload-input";
 import { requireAuth } from "../middleware/auth";
 import type { Env } from "../types";
-
-const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
 
 export const upload = new Hono<Env>().post("/upload", requireAuth("write"), async (c) => {
   const form = await c.req.formData().catch(() => null);
   if (!form) return c.json({ error: "expected multipart form data" }, 400);
-  const file = form.get("file");
-  if (!(file instanceof File)) return c.json({ error: "no file field" }, 400);
-  if (file.size === 0) return c.json({ error: "empty file" }, 400);
-  if (file.size > MAX_UPLOAD_BYTES)
-    return c.json({ error: `file exceeds ${MAX_UPLOAD_BYTES / 1048576}MB limit` }, 413);
+  const input = resolveUpload(form);
+  if (!input.ok) return c.json({ error: input.error }, input.status);
 
-  const rawFolder = typeof form.get("folder") === "string" ? (form.get("folder") as string) : "";
-  const folder = cleanFolder(rawFolder) || "scratch";
-  if (isReservedKey(folder)) return c.json({ error: "reserved folder name" }, 400);
-
-  const key = `${folder}/${slugify(file.name)}`;
+  const { file, folder, key } = input;
   await c.env.BUCKET.put(key, file.stream(), {
     httpMetadata: {
       contentType: file.type || "application/octet-stream",

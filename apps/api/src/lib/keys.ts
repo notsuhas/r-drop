@@ -1,3 +1,4 @@
+// Object-key hygiene: slugs, folder cleaning, and the reserved manifest namespace.
 export const slugify = (s: string) => {
   const dot = s.lastIndexOf(".");
   const [base, ext] = dot > 0 ? [s.slice(0, dot), s.slice(dot)] : [s, ""];
@@ -20,6 +21,10 @@ export const cleanFolder = (f: string) =>
     .replace(/\/{2,}/g, "/");
 
 export const RESERVED_PREFIX = "_manifest";
+
+/** Folder part of an object key ("a/b/c.png" -> "a/b"), or "" at bucket root. */
+export const folderOf = (key: string) =>
+  key.includes("/") ? key.slice(0, key.lastIndexOf("/")) : "";
 
 export const isReservedKey = (key: string) =>
   key === RESERVED_PREFIX || key.startsWith(`${RESERVED_PREFIX}/`);

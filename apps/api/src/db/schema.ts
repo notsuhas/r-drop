@@ -1,3 +1,4 @@
+// D1 schema. Auth users live in WorkOS; only invites and API tokens are stored here.
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const invites = sqliteTable("invites", {

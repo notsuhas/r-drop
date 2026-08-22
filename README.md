@@ -98,6 +98,8 @@ bun run test              # unit tests (bun) + worker integration tests (vitest-
 bunx fallow               # dead code, duplication, complexity — kept at zero findings
 ```
 
+Pushes to `main` auto-deploy: the CI `deploy` job materializes `wrangler.jsonc` from the `WRANGLER_CONFIG` repo secret and runs `wrangler deploy` with `CLOUDFLARE_API_TOKEN` (create one from the "Edit Cloudflare Workers" template).
+
 Integration tests run the real worker on Miniflare with in-memory R2 + D1 (`apps/api/wrangler.test.jsonc`), covering the full bearer-token path: auth matrix, uploads, manifests, rename/move, deletes. CI (`.github/workflows/ci.yml`) runs all of the above on every push.
 
 Conventions: atoms/molecules composition in the dashboard (`components/ui` → `components/<domain>` → pages compose), one-concern-per-file routes in the API, `@/` path aliases (no `../..` imports), pure logic extracted into unit-tested `lib/` functions.

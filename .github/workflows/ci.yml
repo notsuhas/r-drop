@@ -34,3 +34,26 @@ jobs:
 
       - name: codebase intelligence
         run: bunx fallow
+
+  deploy:
+    needs: gates
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+
+      # The instance config is gitignored; CI gets it from a repo secret.
+      - name: materialize wrangler.jsonc
+        run: printf '%s' "$WRANGLER_CONFIG" > wrangler.jsonc
+        env:
+          WRANGLER_CONFIG: ${{ secrets.WRANGLER_CONFIG }}
+
+      - name: build dashboard
+        run: cd apps/dashboard && bun run build
+
+      - name: deploy worker
+        run: bunx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

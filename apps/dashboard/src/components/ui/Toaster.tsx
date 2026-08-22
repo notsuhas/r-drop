@@ -39,7 +39,7 @@ export default function Toaster() {
                 t.action?.onSelect();
                 dismiss(t.id);
               }}
-              className="shrink-0 rounded-sm px-2 py-1 text-xs font-medium text-honey transition-colors hover:bg-honey-wash"
+              className="shrink-0 rounded-sm px-2 py-1 text-xs font-medium text-accent-text transition-colors hover:bg-accent-wash"
             >
               {t.action.label}
             </button>

@@ -87,7 +87,7 @@ function SidebarBody(props: {
                 : "text-ink-2 hover:bg-surface-2/60 hover:text-ink",
             )}
           >
-            <span className={t.active ? "text-honey" : "text-ink-3"}>{t.icon}</span>
+            <span className={t.active ? "text-accent-text" : "text-ink-3"}>{t.icon}</span>
             {!collapsed && t.label}
           </Link>
         ))}

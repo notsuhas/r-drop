@@ -5,7 +5,7 @@ export default function GoogleSignInButton() {
       onClick={() => {
         window.location.href = "/api/auth/login";
       }}
-      className="flex w-full items-center justify-center gap-2.5 rounded-md bg-honey px-4 py-2.5 font-medium text-honey-ink shadow-e1 transition-colors duration-(--duration-fast) ease-(--ease-out-quart) hover:bg-honey-dim"
+      className="flex w-full items-center justify-center gap-2.5 rounded-md bg-accent px-4 py-2.5 font-medium text-accent-ink shadow-e1 transition-colors duration-(--duration-fast) ease-(--ease-out-quart) hover:bg-accent-hover"
     >
       <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" aria-hidden="true">
         <path

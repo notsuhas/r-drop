@@ -1,6 +1,6 @@
 import { cx } from "@/lib/cx";
 
-type Tone = "neutral" | "ok" | "danger" | "honey";
+type Tone = "neutral" | "ok" | "danger" | "accent";
 
 interface IBadge {
   children: React.ReactNode;
@@ -12,7 +12,7 @@ const tones: Record<Tone, string> = {
   neutral: "bg-surface-2 text-ink-2",
   ok: "bg-ok-wash text-ok",
   danger: "bg-danger-wash text-danger",
-  honey: "bg-honey-wash text-honey",
+  accent: "bg-accent-wash text-accent-text",
 };
 
 export default function Badge(props: IBadge) {

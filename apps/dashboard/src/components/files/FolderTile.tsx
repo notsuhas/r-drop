@@ -19,7 +19,7 @@ export default function FolderTile(props: IFolderTile) {
     >
       <Folder
         size={16}
-        className="shrink-0 fill-honey/20 text-honey transition-colors group-hover:fill-honey/35"
+        className="shrink-0 fill-accent/20 text-accent-text transition-colors group-hover:fill-accent/35"
       />
       <span className="min-w-0 flex-1 truncate font-mono text-sm text-ink">{label}</span>
       <span className="shrink-0 font-mono text-2xs text-ink-3">{fmtSize(size)}</span>

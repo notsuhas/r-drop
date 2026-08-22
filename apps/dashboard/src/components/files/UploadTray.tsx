@@ -68,7 +68,7 @@ export default function UploadTray(props: IUploadTray) {
         <div className="h-0.5 bg-surface-3">
           <div
             data-motion-safe="progress"
-            className="h-full bg-honey transition-[width] duration-(--duration-slow) ease-(--ease-out-quart)"
+            className="h-full bg-accent transition-[width] duration-(--duration-slow) ease-(--ease-out-quart)"
             style={{ width: `${Math.round(overall * 100)}%` }}
           />
         </div>

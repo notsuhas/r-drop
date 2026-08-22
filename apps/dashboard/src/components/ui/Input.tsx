@@ -54,7 +54,7 @@ const Input = forwardRef<HTMLInputElement, IInput>(function Input(props, ref) {
         "border transition-colors duration-(--duration-fast)",
         // Placeholder text sits at ink-3, which clears 4.5:1 on surface-2 —
         // the usual muted-gray placeholder does not.
-        invalid ? "border-danger" : "border-border-strong focus-within:border-honey",
+        invalid ? "border-danger" : "border-border-strong focus-within:border-accent",
         disabled && "opacity-45",
         sizes[size],
         className,

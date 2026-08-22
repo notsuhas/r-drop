@@ -51,7 +51,7 @@ export default function UploadTrayItem(props: IUploadTrayItem) {
               data-motion-safe="progress"
               className={cx(
                 "h-full transition-[width] duration-(--duration-base) ease-(--ease-out-quart)",
-                "bg-honey",
+                "bg-accent",
               )}
               style={{ width: `${Math.round(item.progress * 100)}%` }}
             />

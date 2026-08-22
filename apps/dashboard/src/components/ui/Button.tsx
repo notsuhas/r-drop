@@ -25,10 +25,10 @@ interface IButton {
 // Filled variants carry no border; outlined variants carry no shadow. Pairing a
 // 1px border with a wide drop shadow is the pattern this system refuses.
 const variants: Record<Variant, string> = {
-  // Dimmed honey reads as muddy rather than unavailable, so the disabled
+  // A dimmed accent reads as muddy rather than unavailable, so the disabled
   // primary drops to a neutral fill instead of losing opacity.
   primary:
-    "bg-honey text-honey-ink shadow-e1 hover:bg-honey-dim active:brightness-95 disabled:bg-surface-2 disabled:text-ink-3 disabled:shadow-none disabled:opacity-100",
+    "bg-accent text-accent-ink shadow-e1 hover:bg-accent-hover active:brightness-95 disabled:bg-surface-2 disabled:text-ink-3 disabled:shadow-none disabled:opacity-100",
   secondary: "bg-surface-2 text-ink border border-hairline hover:bg-surface-3 hover:border-border",
   ghost: "text-ink-2 hover:bg-surface-2 hover:text-ink",
   subtle: "bg-surface-2/60 text-ink-2 hover:bg-surface-2 hover:text-ink",

@@ -33,7 +33,7 @@ export default function AgentSetupCard() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-2 font-medium text-ink">
-            <Sparkles size={15} className="shrink-0 text-honey" />
+            <Sparkles size={15} className="shrink-0 text-accent-text" />
             Set up an agent to upload for you
           </p>
           <p className="mt-1.5 max-w-xl text-sm text-ink-2">

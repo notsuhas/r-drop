@@ -1,4 +1,4 @@
-import type { IObject } from "./api";
+import type { IObject } from "@/lib/api";
 
 export interface IUploadResult extends IObject {
   manifestUrl: string;
@@ -11,6 +11,7 @@ export function uploadWithProgress(
   contentType: string,
   folder: string,
   onProgress: (fraction: number) => void,
+  signal?: AbortSignal,
 ): Promise<IUploadResult> {
   return new Promise((resolve, reject) => {
     const form = new FormData();
@@ -28,6 +29,8 @@ export function uploadWithProgress(
       else reject(new Error(xhr.response?.error ?? `upload failed (${xhr.status})`));
     };
     xhr.onerror = () => reject(new Error("network error"));
+    xhr.onabort = () => reject(new DOMException("cancelled", "AbortError"));
+    signal?.addEventListener("abort", () => xhr.abort(), { once: true });
     xhr.send(form);
   });
 }

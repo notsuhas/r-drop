@@ -17,6 +17,7 @@ interface IFilesContent {
   onSort: (key: SortKey) => void;
   onToggle: (key: string) => void;
   onInspect: (object: IObject) => void;
+  onRename: (key: string, newKey: string) => void;
   onCopied: () => void;
 }
 
@@ -45,6 +46,7 @@ export default function FilesContent(props: IFilesContent) {
         onSort={rest.onSort}
         onToggle={rest.onToggle}
         onInspect={rest.onInspect}
+        onRename={rest.onRename}
       />
     );
 
@@ -54,6 +56,7 @@ export default function FilesContent(props: IFilesContent) {
       selected={rest.selected}
       onToggle={rest.onToggle}
       onInspect={rest.onInspect}
+      onRename={rest.onRename}
       onCopied={rest.onCopied}
     />
   );

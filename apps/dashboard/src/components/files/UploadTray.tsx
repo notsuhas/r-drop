@@ -5,10 +5,12 @@ interface IUploadTray {
   items: IUploadItem[];
   active: boolean;
   onDismiss: () => void;
+  onCancel: (id: string) => void;
+  onCancelAll: () => void;
 }
 
 export default function UploadTray(props: IUploadTray) {
-  const { items, active, onDismiss } = props;
+  const { items, active, onDismiss, onCancel, onCancelAll } = props;
   if (items.length === 0) return null;
   const done = items.filter((it) => it.status === "done").length;
 
@@ -18,7 +20,15 @@ export default function UploadTray(props: IUploadTray) {
         <span className="font-display text-sm font-semibold">
           {active ? `Uploading ${done + 1}/${items.length}` : `Uploaded ${done}/${items.length}`}
         </span>
-        {!active && (
+        {active ? (
+          <button
+            type="button"
+            onClick={onCancelAll}
+            className="text-xs text-muted hover:text-danger"
+          >
+            Cancel all
+          </button>
+        ) : (
           <button type="button" onClick={onDismiss} className="text-xs text-muted hover:text-ink">
             Clear
           </button>
@@ -26,7 +36,7 @@ export default function UploadTray(props: IUploadTray) {
       </div>
       <ul className="max-h-64 overflow-y-auto">
         {items.map((it) => (
-          <UploadTrayItem key={it.id} item={it} />
+          <UploadTrayItem key={it.id} item={it} onCancel={() => onCancel(it.id)} />
         ))}
       </ul>
     </div>

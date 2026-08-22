@@ -1,12 +1,15 @@
 import { Check, Info } from "lucide-react";
+import RenameField from "@/components/files/RenameField";
 import type { IObject } from "@/lib/api";
 import { basename, extension, fmtSize } from "@/lib/format";
+import { folderOf } from "@/lib/links";
 
 export type SortKey = "name" | "size" | "uploaded";
 
 interface IListView {
   objects: IObject[];
   selected: Set<string>;
+  onRename: (key: string, newKey: string) => void;
   sortKey: SortKey;
   sortAsc: boolean;
   onSort: (key: SortKey) => void;
@@ -21,7 +24,7 @@ const columns: { id: SortKey; label: string; align?: string }[] = [
 ];
 
 export default function ListView(props: IListView) {
-  const { objects, selected, sortKey, sortAsc, onSort, onToggle, onInspect } = props;
+  const { objects, selected, sortKey, sortAsc, onSort, onToggle, onInspect, onRename } = props;
   return (
     <table className="mt-6 w-full border-collapse border border-line text-sm">
       <thead>
@@ -68,8 +71,17 @@ export default function ListView(props: IListView) {
                 </span>
               </td>
               <td className="border-r border-line px-3 py-2">
-                <span className="font-mono text-xs">{basename(o.key)}</span>
-                <span className="ml-2 text-xs uppercase text-muted">{extension(o.key)}</span>
+                <div className="flex items-center gap-2">
+                  {/* biome-ignore lint/a11y/noStaticElementInteractions: stops the row toggle while renaming */}
+                  <span onClick={(e) => e.stopPropagation()} className="min-w-0">
+                    <RenameField
+                      value={basename(o.key)}
+                      compact
+                      onRename={(next) => onRename(o.key, `${folderOf(o.key)}/${next}`)}
+                    />
+                  </span>
+                  <span className="text-xs uppercase text-muted">{extension(o.key)}</span>
+                </div>
               </td>
               <td className="border-r border-line px-3 py-2 text-right font-mono text-xs">
                 {fmtSize(o.size)}

@@ -68,6 +68,7 @@ export default function Files() {
         onSort={b.onSort}
         onToggle={b.toggle}
         onInspect={b.setInspected}
+        onRename={(key, newKey) => b.rename.mutate({ key, newKey })}
         onCopied={b.flashCopied}
       />
 
@@ -90,7 +91,13 @@ export default function Files() {
         />
       )}
 
-      <UploadTray items={b.uploads.items} active={b.uploads.active} onDismiss={b.uploads.dismiss} />
+      <UploadTray
+        items={b.uploads.items}
+        active={b.uploads.active}
+        onDismiss={b.uploads.dismiss}
+        onCancel={b.uploads.cancel}
+        onCancelAll={b.uploads.cancelAll}
+      />
       {drop.dragging && <DropOverlay target={b.uploadTarget} />}
       {marquee.rect && (
         <div

@@ -1,22 +1,27 @@
 import { Check, Copy, Info } from "lucide-react";
+import FilePreview from "@/components/files/FilePreview";
+import RenameField from "@/components/files/RenameField";
 import OverlayIconButton from "@/components/ui/OverlayIconButton";
 import type { IObject } from "@/lib/api";
 import { basename, extension, fmtSize } from "@/lib/format";
-import FilePreview from "./FilePreview";
+import { folderOf } from "@/lib/links";
 
 interface IFileCard {
   object: IObject;
   selected: boolean;
   onToggle: () => void;
   onInspect: () => void;
+  onRename: (newKey: string) => void;
   onCopied: () => void;
 }
 
 export default function FileCard(props: IFileCard) {
-  const { object, selected, onToggle, onInspect, onCopied } = props;
+  const { object, selected, onToggle, onInspect, onRename, onCopied } = props;
+  const name = basename(object.key);
+
   return (
     <div
-      className={`group relative overflow-hidden rounded-none border bg-panel transition-colors ${
+      className={`group relative overflow-hidden border bg-panel transition-colors ${
         selected ? "border-honey" : "border-line hover:border-[rgba(255,255,255,0.2)]"
       }`}
     >
@@ -24,17 +29,21 @@ export default function FileCard(props: IFileCard) {
         <div className="aspect-square w-full overflow-hidden bg-panel-2">
           <FilePreview url={object.url} keyName={object.key} contentType={object.contentType} />
         </div>
-        <div className="border-t border-line p-3">
-          <p className="truncate font-mono text-xs">{basename(object.key)}</p>
-          <p className="mt-1 flex items-center gap-2 text-xs text-muted">
-            <span className="uppercase">{extension(object.key)}</span>
-            <span>·</span>
-            <span>{fmtSize(object.size)}</span>
-          </p>
-        </div>
       </button>
+      <div className="border-t border-line p-3">
+        <RenameField
+          value={name}
+          compact
+          onRename={(next) => onRename(`${folderOf(object.key)}/${next}`)}
+        />
+        <p className="mt-1 flex items-center gap-2 text-xs text-muted">
+          <span className="uppercase">{extension(object.key)}</span>
+          <span>·</span>
+          <span>{fmtSize(object.size)}</span>
+        </p>
+      </div>
       <div
-        className={`absolute left-2 top-2 flex h-5 w-5 items-center justify-center rounded-none border text-xs transition-opacity ${
+        className={`absolute left-2 top-2 flex h-5 w-5 items-center justify-center border text-xs transition-opacity ${
           selected
             ? "border-honey bg-honey text-honey-ink opacity-100"
             : "border-line bg-bg opacity-0 group-hover:opacity-100"

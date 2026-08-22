@@ -162,8 +162,12 @@ describe("objects", () => {
     const res = await SELF.fetch(`${APP}/api/objects?prefix=checkout-v2`, {
       headers: { authorization: `Bearer ${WRITE_TOKEN}` },
     });
-    const body = (await res.json()) as { objects: { key: string }[]; folders: string[] };
+    const body = (await res.json()) as {
+      objects: { key: string; contentType: string }[];
+      folders: string[];
+    };
     expect(body.objects.map((o) => o.key)).toEqual(["checkout-v2/a.png"]);
+    expect(body.objects[0].contentType).toBe("image/png");
   });
 
   it("root listing hides the _manifest folder", async () => {

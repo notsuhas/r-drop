@@ -7,7 +7,8 @@ export async function listAll(bucket: R2Bucket, options: R2ListOptions) {
   const delimitedPrefixes: string[] = [];
   let cursor: string | undefined;
   do {
-    const page = await bucket.list({ ...options, cursor });
+    // httpMetadata is only returned when explicitly included.
+    const page = await bucket.list({ ...options, cursor, include: ["httpMetadata"] });
     objects.push(...page.objects);
     delimitedPrefixes.push(...(page.delimitedPrefixes ?? []));
     cursor = page.truncated ? page.cursor : undefined;

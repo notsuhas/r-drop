@@ -1,6 +1,11 @@
 {
-  // Test suites are entry points (bun test), not dead files.
-  "entry": ["**/__tests__/**/*.test.ts", "**/__tests__/**/*.test.tsx", "**/__tests__/**/*.vitest.ts", "**/test-setup.ts"],
+  // Test files are excluded from analysis (health/duplication noise there is
+  // acceptable); the two knobs below stop test-only usage from reading as dead.
+  "ignorePatterns": ["**/__tests__/**", "**/test-setup.ts", "**/vitest.config.ts"],
+  // Exports like buildManifest / MAX_UPLOAD_BYTES are used in-file and by tests.
+  "ignoreExportsUsedInFile": true,
+  // Test-harness deps are only imported from ignored test files.
+  "ignoreDependencies": ["@cloudflare/vitest-pool-workers", "@happy-dom/global-registrator"],
   "health": {
     // No coverage data is fed to fallow, so CRAP scores are estimates; the
     // real complexity gates are maxCyclomatic/maxCognitive defaults.

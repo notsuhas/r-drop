@@ -2,8 +2,11 @@
 // The bearer-token path is exercised end-to-end; WorkOS session flows are
 // external and covered manually.
 import { env, SELF } from "cloudflare:test";
+import { drizzle } from "drizzle-orm/d1";
 import { sha256 } from "hono/utils/crypto";
 import { beforeEach, describe, expect, it } from "vitest";
+import * as schema from "@/db/schema";
+import { markInviteUsed } from "@/lib/invites";
 
 const APP = "https://app.test";
 
@@ -315,5 +318,51 @@ describe("upload content-type guard", () => {
       body: form,
     });
     expect(res.status).toBe(400);
+  });
+});
+
+// The invite row is what the People page reads to decide Active vs Pending.
+// Stamping used to live inside the invite-gate branch, which admins skip, so an
+// admin who was also invited showed "hasn't signed in yet" forever.
+describe("invite sign-in stamp", () => {
+  const db = () => drizzle(env.DB, { schema });
+
+  async function seedInvite(email: string, usedAt: number | null = null) {
+    await env.DB.prepare(
+      "INSERT INTO invites (email, created_by, created_at, used_at) VALUES (?, ?, ?, ?)",
+    )
+      .bind(email, "admin", Date.now(), usedAt)
+      .run();
+  }
+
+  const readUsedAt = async (email: string) =>
+    (
+      await env.DB.prepare("SELECT used_at FROM invites WHERE email = ?").bind(email).first<{
+        used_at: number | null;
+      }>()
+    )?.used_at ?? null;
+
+  it("stamps a pending invite", async () => {
+    await seedInvite("someone@test.dev");
+    await markInviteUsed(db(), "someone@test.dev", 1000);
+    expect(await readUsedAt("someone@test.dev")).toBe(1000);
+  });
+
+  it("keeps the first timestamp on later sign-ins", async () => {
+    await seedInvite("someone@test.dev");
+    await markInviteUsed(db(), "someone@test.dev", 1000);
+    await markInviteUsed(db(), "someone@test.dev", 2000);
+    expect(await readUsedAt("someone@test.dev")).toBe(1000);
+  });
+
+  it("matches case-insensitively, since providers do not fix casing", async () => {
+    await seedInvite("someone@test.dev");
+    await markInviteUsed(db(), "SomeOne@Test.dev", 1000);
+    expect(await readUsedAt("someone@test.dev")).toBe(1000);
+  });
+
+  it("is a no-op for an admin who was never invited", async () => {
+    await expect(markInviteUsed(db(), "admin@test.dev", 1000)).resolves.toBeDefined();
+    expect(await readUsedAt("admin@test.dev")).toBeNull();
   });
 });

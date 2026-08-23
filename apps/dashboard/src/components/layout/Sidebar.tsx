@@ -1,6 +1,7 @@
 import { FolderOpen, KeyRound, Mail, X } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import BrandMark from "@/components/auth/BrandMark";
+import GitHubLink from "@/components/layout/GitHubLink";
 import UserChip from "@/components/layout/UserChip";
 import IconButton from "@/components/ui/IconButton";
 import { cx } from "@/lib/cx";
@@ -93,7 +94,11 @@ function SidebarBody(props: {
         ))}
       </nav>
 
-      <div className={cx("mt-auto border-t border-hairline", collapsed ? "p-2" : "p-2")}>
+      <div className="mt-auto p-2">
+        <GitHubLink collapsed={collapsed} onNavigate={onNavigate} />
+      </div>
+
+      <div className="border-t border-hairline p-2">
         <UserChip {...user} collapsed={collapsed} />
       </div>
     </>

@@ -6,7 +6,7 @@ import { drizzle } from "drizzle-orm/d1";
 import { sha256 } from "hono/utils/crypto";
 import { beforeEach, describe, expect, it } from "vitest";
 import * as schema from "@/db/schema";
-import { markInviteUsed } from "@/lib/invites";
+import { recordSignIn } from "@/lib/invites";
 
 const APP = "https://app.test";
 
@@ -335,34 +335,210 @@ describe("invite sign-in stamp", () => {
       .run();
   }
 
-  const readUsedAt = async (email: string) =>
-    (
-      await env.DB.prepare("SELECT used_at FROM invites WHERE email = ?").bind(email).first<{
-        used_at: number | null;
-      }>()
-    )?.used_at ?? null;
+  const readRow = async (email: string) =>
+    await env.DB.prepare("SELECT used_at, workos_user_id FROM invites WHERE email = ?")
+      .bind(email)
+      .first<{ used_at: number | null; workos_user_id: string | null }>();
 
-  it("stamps a pending invite", async () => {
+  it("stamps a pending invite and records the workos user id", async () => {
     await seedInvite("someone@test.dev");
-    await markInviteUsed(db(), "someone@test.dev", 1000);
-    expect(await readUsedAt("someone@test.dev")).toBe(1000);
+    await recordSignIn(db(), "someone@test.dev", "user_abc", 1000);
+    expect(await readRow("someone@test.dev")).toMatchObject({
+      used_at: 1000,
+      workos_user_id: "user_abc",
+    });
   });
 
   it("keeps the first timestamp on later sign-ins", async () => {
     await seedInvite("someone@test.dev");
-    await markInviteUsed(db(), "someone@test.dev", 1000);
-    await markInviteUsed(db(), "someone@test.dev", 2000);
-    expect(await readUsedAt("someone@test.dev")).toBe(1000);
+    await recordSignIn(db(), "someone@test.dev", "user_abc", 1000);
+    await recordSignIn(db(), "someone@test.dev", "user_abc", 2000);
+    expect((await readRow("someone@test.dev"))?.used_at).toBe(1000);
+  });
+
+  it("refreshes the user id even though the timestamp is pinned", async () => {
+    await seedInvite("someone@test.dev");
+    await recordSignIn(db(), "someone@test.dev", "user_old", 1000);
+    await recordSignIn(db(), "someone@test.dev", "user_new", 2000);
+    expect(await readRow("someone@test.dev")).toMatchObject({
+      used_at: 1000,
+      workos_user_id: "user_new",
+    });
   });
 
   it("matches case-insensitively, since providers do not fix casing", async () => {
     await seedInvite("someone@test.dev");
-    await markInviteUsed(db(), "SomeOne@Test.dev", 1000);
-    expect(await readUsedAt("someone@test.dev")).toBe(1000);
+    await recordSignIn(db(), "SomeOne@Test.dev", "user_abc", 1000);
+    expect((await readRow("someone@test.dev"))?.used_at).toBe(1000);
   });
 
   it("is a no-op for an admin who was never invited", async () => {
-    await expect(markInviteUsed(db(), "admin@test.dev", 1000)).resolves.toBeDefined();
-    expect(await readUsedAt("admin@test.dev")).toBeNull();
+    await expect(recordSignIn(db(), "admin@test.dev", "user_abc", 1000)).resolves.toBeDefined();
+    expect(await readRow("admin@test.dev")).toBeNull();
+  });
+});
+
+// Objects are served immutable for a year, so a replaced key keeps serving the
+// old bytes from every edge that already saw them, with no revalidation.
+describe("overwrite protection", () => {
+  it("a second upload to the same key is a 409, not a silent replace", async () => {
+    expect((await upload(WRITE_TOKEN, "shots", "hero.png", "v1")).status).toBe(200);
+    const second = await upload(WRITE_TOKEN, "shots", "hero.png", "v2");
+    expect(second.status).toBe(409);
+    const stored = await env.BUCKET.get("shots/hero.png");
+    expect(await stored?.text()).toBe("v1");
+  });
+
+  it("keys that only differ by slug noise collide, and the collision is refused", async () => {
+    expect((await upload(WRITE_TOKEN, "shots", "Hero Banner.png")).status).toBe(200);
+    expect((await upload(WRITE_TOKEN, "shots", "hero_banner.PNG")).status).toBe(409);
+  });
+
+  it("rename refuses to clobber an existing destination", async () => {
+    await upload(WRITE_TOKEN, "shots", "a.png");
+    await upload(WRITE_TOKEN, "shots", "b.png");
+    const res = await SELF.fetch(`${APP}/api/objects/rename`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${WRITE_TOKEN}`, "content-type": "application/json" },
+      body: JSON.stringify({ key: "shots/a.png", newKey: "shots/b.png" }),
+    });
+    expect(res.status).toBe(409);
+    expect(await env.BUCKET.head("shots/a.png")).not.toBeNull();
+  });
+});
+
+describe("upload guards", () => {
+  it("rejects an svg carrying script", async () => {
+    const form = new FormData();
+    form.set("folder", "icons");
+    form.set(
+      "file",
+      new File(
+        ['<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'],
+        "x.svg",
+        {
+          type: "image/svg+xml",
+        },
+      ),
+    );
+    const res = await SELF.fetch(`${APP}/api/upload`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${WRITE_TOKEN}` },
+      body: form,
+    });
+    expect(res.status).toBe(400);
+    expect(await env.BUCKET.head("icons/x.svg")).toBeNull();
+  });
+
+  it("rejects an svg with an inline event handler", async () => {
+    const form = new FormData();
+    form.set("folder", "icons");
+    form.set(
+      "file",
+      new File(['<svg onload="alert(1)"></svg>'], "y.svg", { type: "image/svg+xml" }),
+    );
+    const res = await SELF.fetch(`${APP}/api/upload`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${WRITE_TOKEN}` },
+      body: form,
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it("accepts a plain svg", async () => {
+    const form = new FormData();
+    form.set("folder", "icons");
+    form.set(
+      "file",
+      new File(
+        ['<svg xmlns="http://www.w3.org/2000/svg"><rect width="8" height="8"/></svg>'],
+        "ok.svg",
+        {
+          type: "image/svg+xml",
+        },
+      ),
+    );
+    const res = await SELF.fetch(`${APP}/api/upload`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${WRITE_TOKEN}` },
+      body: form,
+    });
+    expect(res.status).toBe(200);
+  });
+
+  it("413s an oversize body before parsing it", async () => {
+    const res = await SELF.fetch(`${APP}/api/upload`, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${WRITE_TOKEN}`,
+        "content-type": "multipart/form-data; boundary=x",
+        "content-length": String(500 * 1024 * 1024),
+      },
+      body: "--x--",
+    });
+    expect(res.status).toBe(413);
+  });
+
+  it("refuses a delete key that is not shaped like one of ours", async () => {
+    const res = await SELF.fetch(`${APP}/api/objects/a/..%2Fb/x.png`, {
+      method: "DELETE",
+      headers: { authorization: `Bearer ${WRITE_TOKEN}` },
+    });
+    expect(res.status).toBe(400);
+    expect(await env.BUCKET.head("_manifest/a/../b.json")).toBeNull();
+  });
+});
+
+describe("token lifecycle", () => {
+  async function seedOwnedToken(token: string, email: string | null, expiresAt: number | null) {
+    const hash = (await sha256(token)) ?? "";
+    await env.DB.prepare(
+      "INSERT INTO api_tokens (id, name, hash, user_id, user_email, prefix, scope, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    )
+      .bind(
+        crypto.randomUUID(),
+        "owned",
+        hash,
+        "user_owner",
+        email,
+        token.slice(0, 8),
+        "write",
+        Date.now(),
+        expiresAt,
+      )
+      .run();
+  }
+
+  const OWNED = "rd_cccccccccccccccccccccccccccccccc";
+
+  const call = (token: string) =>
+    SELF.fetch(`${APP}/api/me`, { headers: { authorization: `Bearer ${token}` } });
+
+  it("rejects an expired token", async () => {
+    await seedOwnedToken(OWNED, null, Date.now() - 1000);
+    expect((await call(OWNED)).status).toBe(401);
+  });
+
+  it("accepts a token whose expiry is still ahead", async () => {
+    await seedOwnedToken(OWNED, null, Date.now() + 60_000);
+    expect((await call(OWNED)).status).toBe(200);
+  });
+
+  it("rejects a token whose owner is no longer invited", async () => {
+    await seedOwnedToken(OWNED, "gone@test.dev", null);
+    expect((await call(OWNED)).status).toBe(403);
+  });
+
+  it("accepts a token whose owner still holds an invite", async () => {
+    await env.DB.prepare("INSERT INTO invites (email, created_by, created_at) VALUES (?, ?, ?)")
+      .bind("here@test.dev", "admin", Date.now())
+      .run();
+    await seedOwnedToken(OWNED, "here@test.dev", null);
+    expect((await call(OWNED)).status).toBe(200);
+  });
+
+  it("grandfathers tokens issued before the owner email was recorded", async () => {
+    await seedOwnedToken(OWNED, null, null);
+    expect((await call(OWNED)).status).toBe(200);
   });
 });

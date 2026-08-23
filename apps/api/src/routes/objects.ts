@@ -2,7 +2,7 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
-import { cleanFolder, folderOf, isReservedKey } from "@/lib/keys";
+import { cleanFolder, folderOf, isCleanKey, isReservedKey } from "@/lib/keys";
 import { listAll, regenerateManifest } from "@/lib/manifest";
 import { resolveRenameTarget } from "@/lib/rename";
 import { requireAuth } from "@/middleware/auth";
@@ -59,10 +59,22 @@ export const objects = new Hono<Env>()
 
       const obj = await c.env.BUCKET.get(key);
       if (!obj) return c.json({ error: "not found" }, 404);
-      await c.env.BUCKET.put(target.newKey, await obj.arrayBuffer(), {
-        httpMetadata: obj.httpMetadata,
-      });
-      await c.env.BUCKET.delete(key);
+      // Same reasoning as upload: the destination is cached immutable, so
+      // clobbering it destroys the old object and keeps serving it anyway.
+      if (await c.env.BUCKET.head(target.newKey))
+        return c.json({ error: `${target.newKey} already exists`, key: target.newKey }, 409);
+
+      // Stream rather than arrayBuffer(): a 50MB round trip through worker
+      // memory buys nothing when put() takes the body directly.
+      await c.env.BUCKET.put(target.newKey, obj.body, { httpMetadata: obj.httpMetadata });
+      try {
+        await c.env.BUCKET.delete(key);
+      } catch (err) {
+        // Put succeeded, delete did not. Undo the copy so the rename fails
+        // cleanly instead of silently duplicating the object.
+        await c.env.BUCKET.delete(target.newKey).catch(() => {});
+        throw err;
+      }
 
       if (target.oldFolder) await regenerateManifest(c.env, target.oldFolder);
       if (target.newFolder !== target.oldFolder) await regenerateManifest(c.env, target.newFolder);
@@ -73,6 +85,10 @@ export const objects = new Hono<Env>()
   .delete("/objects/:key{.+}", requireAuth("write"), async (c) => {
     const key = c.req.param("key");
     if (isReservedKey(key)) return c.json({ error: "manifests are managed automatically" }, 400);
+    // The key comes straight off the URL and reaches a bucket write through
+    // the manifest regeneration below, so "a/../b/x.png" used to leave a
+    // stray "_manifest/a/../b.json" behind.
+    if (!isCleanKey(key)) return c.json({ error: "invalid key" }, 400);
     await c.env.BUCKET.delete(key);
     const folder = folderOf(key);
     if (folder) await regenerateManifest(c.env, folder);

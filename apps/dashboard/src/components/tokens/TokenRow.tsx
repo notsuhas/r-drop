@@ -1,10 +1,27 @@
 import { Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import RenameField from "@/components/files/RenameField";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import IconButton from "@/components/ui/IconButton";
 import { fmtWhen } from "@/lib/format";
+
+/**
+ * The mono line under the name: prefix, scope, expiry (only when set), and
+ * last use. Built as a list so the row itself stays a single flat render.
+ */
+function metaParts(token: ITokenRowData, expired: boolean) {
+  const parts = [`${token.prefix}\u2026`, token.scope];
+  if (token.expiresAt !== null) {
+    parts.push(expired ? "expired" : `expires ${fmtWhen(new Date(token.expiresAt).toISOString())}`);
+  }
+  parts.push(
+    token.lastUsedAt
+      ? `last used ${fmtWhen(new Date(token.lastUsedAt).toISOString())}`
+      : "never used",
+  );
+  return parts;
+}
 
 interface ITokenRowData {
   id: string;
@@ -12,6 +29,7 @@ interface ITokenRowData {
   prefix: string;
   scope: string;
   lastUsedAt: number | null;
+  expiresAt: number | null;
 }
 
 interface ITokenRow {
@@ -23,21 +41,19 @@ interface ITokenRow {
 export default function TokenRow(props: ITokenRow) {
   const { token, onRename, onDelete } = props;
   const [confirming, setConfirming] = useState(false);
+  const expired = token.expiresAt !== null && token.expiresAt <= Date.now();
 
   return (
     <div className="group flex flex-wrap items-center justify-between gap-3 px-4 py-3 transition-colors duration-(--duration-fast) hover:bg-surface-2">
       <div className="min-w-0 flex-1">
         <RenameField value={token.name} onRename={onRename} />
         <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-2xs text-ink-3">
-          <span>{token.prefix}…</span>
-          <span aria-hidden="true">·</span>
-          <span>{token.scope}</span>
-          <span aria-hidden="true">·</span>
-          <span>
-            {token.lastUsedAt
-              ? `last used ${fmtWhen(new Date(token.lastUsedAt).toISOString())}`
-              : "never used"}
-          </span>
+          {metaParts(token, expired).map((part, i) => (
+            <Fragment key={part}>
+              {i > 0 && <span aria-hidden="true">·</span>}
+              <span className={part === "expired" ? "text-danger" : undefined}>{part}</span>
+            </Fragment>
+          ))}
         </p>
       </div>
 
@@ -53,7 +69,8 @@ export default function TokenRow(props: ITokenRow) {
         </div>
       ) : (
         <div className="flex items-center gap-2">
-          {!token.lastUsedAt && <Badge tone="neutral">Unused</Badge>}
+          {expired && <Badge tone="danger">Expired</Badge>}
+          {!expired && !token.lastUsedAt && <Badge tone="neutral">Unused</Badge>}
           <IconButton
             variant="danger"
             label={`Revoke ${token.name}`}

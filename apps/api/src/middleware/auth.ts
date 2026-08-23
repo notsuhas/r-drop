@@ -1,6 +1,6 @@
 // Two ways in: bearer token (agents) or WorkOS sealed-session cookie (humans).
 import { eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/d1";
+import { type DrizzleD1Database, drizzle } from "drizzle-orm/d1";
 import { createMiddleware } from "hono/factory";
 import { sha256 } from "hono/utils/crypto";
 import type { Bindings } from "@/bindings";
@@ -15,6 +15,28 @@ type BearerResult =
   | { actor: Actor; touch: () => Promise<unknown> }
   | { error: string; status: 401 | 403 };
 
+/**
+ * A token is only as valid as its owner still is.
+ *
+ * Revoking an invite deletes that person's tokens, but that is a single point
+ * of failure. Re-checking the owner on each request means an owner who is no
+ * longer admin or invited cannot keep uploading with a token that survived.
+ * Tokens issued before user_email existed carry null and are grandfathered —
+ * re-issue one to get the check.
+ */
+async function ownerStillPermitted(
+  env: Bindings,
+  db: DrizzleD1Database<typeof schema>,
+  userEmail: string | null,
+) {
+  if (!userEmail) return true;
+  if (isAdminEmail(env, userEmail)) return true;
+  const invite = await db.query.invites.findFirst({
+    where: eq(schema.invites.email, userEmail.toLowerCase()),
+  });
+  return Boolean(invite);
+}
+
 async function authenticateBearer(
   env: Bindings,
   bearer: string,
@@ -25,8 +47,12 @@ async function authenticateBearer(
   const hash = (await sha256(bearer)) ?? "";
   const token = await db.query.apiTokens.findFirst({ where: eq(schema.apiTokens.hash, hash) });
   if (!token) return { error: "invalid token", status: 401 };
+  if (token.expiresAt !== null && token.expiresAt <= Date.now())
+    return { error: "token expired", status: 401 };
   if (scope === "write" && token.scope !== "write")
     return { error: "insufficient scope", status: 403 };
+  if (!(await ownerStillPermitted(env, db, token.userEmail)))
+    return { error: "token owner is no longer permitted", status: 403 };
   return {
     actor: { type: "token", userId: token.userId, tokenId: token.id },
     touch: () =>

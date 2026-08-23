@@ -5,7 +5,7 @@ import { Hono } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import * as schema from "@/db/schema";
 import { isAdminEmail } from "@/lib/admin";
-import { markInviteUsed } from "@/lib/invites";
+import { recordSignIn } from "@/lib/invites";
 import { clearSessionCookie, getSessionUser, setSessionCookie } from "@/lib/session";
 import { getWorkos } from "@/lib/workos";
 import type { Env } from "@/types";
@@ -68,7 +68,7 @@ export const auth = new Hono<Env>()
     }
 
     if (!result.sealedSession) return c.redirect("/?error=auth_failed");
-    c.executionCtx.waitUntil(markInviteUsed(db, email, Date.now()));
+    c.executionCtx.waitUntil(recordSignIn(db, email, result.user.id, Date.now()));
     setSessionCookie(c, result.sealedSession);
     return c.redirect("/");
   })

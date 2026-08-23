@@ -1,10 +1,11 @@
 // WorkOS OAuth flow. The callback enforces the invite gate before any session is issued.
-import { and, eq, isNull } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import * as schema from "@/db/schema";
 import { isAdminEmail } from "@/lib/admin";
+import { markInviteUsed } from "@/lib/invites";
 import { clearSessionCookie, getSessionUser, setSessionCookie } from "@/lib/session";
 import { getWorkos } from "@/lib/workos";
 import type { Env } from "@/types";
@@ -53,8 +54,10 @@ export const auth = new Hono<Env>()
     }
 
     const email = result.user.email.toLowerCase();
+    const db = drizzle(c.env.DB, { schema });
+
+    // The gate is admin-exempt; the stamp below is not. Keep them separate.
     if (!isAdminEmail(c.env, email)) {
-      const db = drizzle(c.env.DB, { schema });
       const invite = await db.query.invites.findFirst({
         where: eq(schema.invites.email, email),
       });
@@ -62,16 +65,10 @@ export const auth = new Hono<Env>()
         c.executionCtx.waitUntil(workos.userManagement.deleteUser(result.user.id).catch(() => {}));
         return c.redirect("/?error=not_invited");
       }
-      c.executionCtx.waitUntil(
-        db
-          .update(schema.invites)
-          .set({ usedAt: Date.now() })
-          .where(and(eq(schema.invites.email, email), isNull(schema.invites.usedAt)))
-          .run(),
-      );
     }
 
     if (!result.sealedSession) return c.redirect("/?error=auth_failed");
+    c.executionCtx.waitUntil(markInviteUsed(db, email, Date.now()));
     setSessionCookie(c, result.sealedSession);
     return c.redirect("/");
   })

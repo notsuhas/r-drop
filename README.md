@@ -38,8 +38,8 @@ token so they can upload for you.
 
 Building UI with coding agents means constantly moving binary assets into code. Committing them bloats the repo; pasting 30 CDN URLs into a prompt is worse. r-drop gives you:
 
-- **Public, immutable asset URLs** served straight off an R2 custom domain — reads never touch a Worker, so they're free-tier CDN reads.
-- **Folder manifests**: every folder publishes `/_manifest/<folder>.json` (camelCase name → URL), regenerated on every write. Agents fetch one URL instead of being fed thirty.
+- **Public, immutable asset URLs** served straight off an R2 custom domain — reads never touch a Worker, so they're free-tier CDN reads. Immutable is literal: a key is written once. Uploading over an existing key is a `409`, because the old bytes would keep being served from every edge that already cached them.
+- **Folder manifests**: every folder publishes `/_manifest/<folder>.json` (camelCase name → URL), regenerated on every write. Agents fetch one URL instead of being fed thirty. Names that camelCase alike (`logo-dark.png`, `logo_dark.svg`) are disambiguated by extension rather than overwriting each other.
 - **Agent-first uploads**: bearer tokens + a one-click "copy setup prompt" that teaches any agent to install r-drop as a permanent skill.
 - **A dashboard that behaves like a real file manager**: drag-drop (files *and* folders), live upload progress, grid and list views, click/⌘-click/shift-click selection, full keyboard navigation, right-click menus, and copy-as (`URLs` / `JSON` / `TypeScript const` / manifest URL).
 
@@ -76,8 +76,10 @@ Two hostnames, two concerns:
 ### Auth model
 
 - Google sign-in only. The OAuth callback enforces an **email-pinned invite gate**: unless the email is in `ADMIN_EMAILS` or on the `invites` table, no session is issued and the WorkOS user is deleted again. No invite links — inviting an email *is* the invite.
-- Agents authenticate with bearer tokens (`rd_` + 32 hex). Only the sha256 hash is stored; the token is shown once. Tokens are scoped (`read`/`write`), renameable, and revocable.
-- Removing an active invite cascades: WorkOS user deleted (revokes sessions), their tokens deleted.
+- Agents authenticate with bearer tokens (`rd_` + 32 hex). Only the sha256 hash is stored; the token is shown once. Tokens are scoped (`read`/`write`), renameable, revocable, and optionally expiring. Every request re-checks that the token's owner is still an admin or still holds an invite, so revocation does not depend on the cascade below succeeding.
+- Removing an active invite cascades: their tokens are deleted locally first, then the WorkOS user is deleted (which revokes live sessions). If WorkOS is unreachable the tokens are still gone and the endpoint answers `502` saying the browser session may outlive the removal — it does not report a clean removal it did not make.
+
+Uploads are capped at 50MB and refuse `text/html`, `application/xhtml+xml`, and any SVG carrying active content (script, event handlers, `javascript:` URLs). Nothing sits in the read path to add a CSP header, so an executable document on the CDN origin would be stored XSS.
 
 ## Agent usage
 

@@ -19,7 +19,8 @@ export default function Tokens() {
   const invalidate = () => qc.invalidateQueries({ queryKey: ["tokens"] });
 
   const create = useMutation({
-    mutationFn: (name: string) => api.createToken(name, "write"),
+    mutationFn: (input: { name: string; expiresInDays?: number }) =>
+      api.createToken(input.name, "write", input.expiresInDays),
     onSuccess: (res) => setFresh(res.token),
     onSettled: invalidate,
   });
@@ -51,7 +52,7 @@ export default function Tokens() {
             <h2 className="text-sm font-medium">Create a token by hand</h2>
             <div className="mt-2.5">
               <CreateTokenForm
-                onCreate={(name) => create.mutate(name)}
+                onCreate={(name, expiresInDays) => create.mutate({ name, expiresInDays })}
                 pending={create.isPending}
                 error={create.isError ? create.error.message : undefined}
               />

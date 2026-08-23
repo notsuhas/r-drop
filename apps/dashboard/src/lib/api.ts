@@ -36,9 +36,9 @@ export const api = {
     client.api.invites[":email"].$delete({ param: { email } }).then(unwrap),
   tokens: () =>
     client.api.tokens.$get().then(unwrap<InferResponseType<typeof client.api.tokens.$get, 200>>),
-  createToken: (name: string, scope: string) =>
+  createToken: (name: string, scope: string, expiresInDays?: number) =>
     client.api.tokens
-      .$post({ json: { name, scope } })
+      .$post({ json: { name, scope, expiresInDays } })
       .then(unwrap<InferResponseType<typeof client.api.tokens.$post, 201>>),
   renameToken: (id: string, name: string) =>
     client.api.tokens[":id"].$patch({ param: { id }, json: { name } }).then(unwrap),

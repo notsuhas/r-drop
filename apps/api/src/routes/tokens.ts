@@ -38,13 +38,19 @@ export const tokens = new Hono<Env>()
     requireAuth(),
     zValidator(
       "json",
-      z.object({ name: z.string().trim().min(1).max(64), scope: z.string().optional() }),
+      z.object({
+        name: z.string().trim().min(1).max(64),
+        scope: z.string().optional(),
+        // Omitted means no expiry, which is what the dashboard's default is.
+        expiresInDays: z.number().int().min(1).max(365).optional(),
+      }),
     ),
     async (c) => {
       const actor = sessionActor(c);
       if (!actor) return c.json({ error: "session required" }, 403);
-      const { name, scope: rawScope } = c.req.valid("json");
+      const { name, scope: rawScope, expiresInDays } = c.req.valid("json");
       const scope = rawScope === "read" ? "read" : "write";
+      const expiresAt = expiresInDays ? Date.now() + expiresInDays * 86_400_000 : null;
 
       const bytes = new Uint8Array(16);
       crypto.getRandomValues(bytes);
@@ -56,11 +62,14 @@ export const tokens = new Hono<Env>()
         name,
         hash: (await sha256(token)) ?? "",
         userId: actor.userId,
+        // Stored so every request can re-check the owner is still permitted.
+        userEmail: actor.email.toLowerCase(),
         prefix: token.slice(0, 8),
         scope,
         createdAt: Date.now(),
+        expiresAt,
       });
-      return c.json({ token, name, scope }, 201);
+      return c.json({ token, name, scope, expiresAt }, 201);
     },
   )
 

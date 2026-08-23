@@ -28,6 +28,7 @@ mock.module("@/lib/upload", () => ({
   },
 }));
 
+const { MAX_UPLOAD_BYTES } = await import("@api/lib/upload-input");
 const { useUploads } = await import("@/hooks/useUploads");
 
 describe("useUploads", () => {
@@ -94,5 +95,42 @@ describe("useUploads", () => {
     await waitFor(() => expect(result.current.active).toBe(false));
     act(() => result.current.dismiss());
     expect(result.current.items).toEqual([]);
+  });
+});
+
+// The queue reads the whole file into memory and uploads every byte before
+// the worker can answer 413, so oversize files are stopped here instead.
+describe("useUploads size guard", () => {
+  beforeEach(() => {
+    uploadCalls.length = 0;
+  });
+
+  const big = () => new File([new Uint8Array(1)], "huge.bin", { type: "application/octet-stream" });
+
+  function oversize() {
+    const file = big();
+    Object.defineProperty(file, "size", { value: MAX_UPLOAD_BYTES + 1 });
+    return file;
+  }
+
+  test("marks an oversize file as an error without uploading it", async () => {
+    const { result } = renderHook(() => useUploads(() => {}));
+    act(() => result.current.enqueue([{ file: oversize(), folder: "f" }]));
+    await waitFor(() => expect(result.current.items[0]?.status).toBe("error"));
+    expect(result.current.items[0]?.error).toContain("limit");
+    expect(uploadCalls).toHaveLength(0);
+  });
+
+  test("still uploads the acceptable files alongside it", async () => {
+    const { result } = renderHook(() => useUploads(() => {}));
+    act(() =>
+      result.current.enqueue([
+        { file: oversize(), folder: "f" },
+        { file: new File(["ok"], "small.png", { type: "image/png" }), folder: "f" },
+      ]),
+    );
+    await waitFor(() => expect(uploadCalls).toHaveLength(1));
+    expect(uploadCalls[0].filename).toBe("small.png");
+    expect(result.current.items.map((i) => i.status)).toEqual(["error", "done"]);
   });
 });

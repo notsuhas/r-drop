@@ -1,3 +1,4 @@
+import { MAX_UPLOAD_BYTES } from "@api/lib/upload-input";
 import { useCallback, useRef, useState } from "react";
 import { uploadWithProgress } from "@/lib/upload";
 
@@ -67,17 +68,26 @@ export function useUploads(onUploaded: () => void) {
   const enqueue = useCallback(
     (entries: { file: File; folder: string }[]) => {
       const jobs = entries.map((e) => ({ id: crypto.randomUUID(), ...e }));
+      // Reject oversize here rather than letting the worker do it: the queue
+      // reads the whole file into memory and uploads every byte before the
+      // server can answer 413, so a 500MB drop cost a 500MB round trip.
+      const tooBig = new Set(jobs.filter((j) => j.file.size > MAX_UPLOAD_BYTES).map((j) => j.id));
       setItems((prev) => [
         ...prev,
         ...jobs.map((j) => ({
           id: j.id,
           name: j.file.name,
           size: j.file.size,
-          status: "queued" as const,
+          ...(tooBig.has(j.id)
+            ? {
+                status: "error" as const,
+                error: `over the ${MAX_UPLOAD_BYTES / 1048576}MB limit`,
+              }
+            : { status: "queued" as const }),
           progress: 0,
         })),
       ]);
-      queue.current.push(...jobs);
+      queue.current.push(...jobs.filter((j) => !tooBig.has(j.id)));
       void drain();
     },
     [drain],

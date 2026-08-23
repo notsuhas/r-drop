@@ -22,6 +22,13 @@
       "when": 1787405149614,
       "tag": "0002_drop_better_auth",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1787454779238,
+      "tag": "0003_token_owner_and_expiry",
+      "breakpoints": true
     }
   ]
 }

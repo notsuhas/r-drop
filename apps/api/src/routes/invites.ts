@@ -1,6 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/d1";
+import { type DrizzleD1Database, drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { z } from "zod";
 import * as schema from "@/db/schema";
@@ -32,6 +32,35 @@ async function loadProfiles(env: Env["Bindings"]): Promise<Map<string, IProfile>
     });
   }
   return profiles;
+}
+
+/** Deletes every token belonging to a person, by either identifier we hold. */
+async function purgeTokens(
+  db: DrizzleD1Database<typeof schema>,
+  email: string,
+  workosUserId: string | null | undefined,
+) {
+  await db.delete(schema.apiTokens).where(eq(schema.apiTokens.userEmail, email));
+  if (workosUserId) {
+    await db.delete(schema.apiTokens).where(eq(schema.apiTokens.userId, workosUserId));
+  }
+}
+
+/** Deletes the WorkOS user(s) for an email, revoking sessions. False if any step failed. */
+async function revokeWorkosUser(env: Env["Bindings"], email: string) {
+  if (!workosConfigured(env)) return true;
+  const workos = getWorkos(env);
+  const users = await workos.userManagement.listUsers({ email }).catch(() => null);
+  if (!users) return false;
+  const results = await Promise.all(
+    users.data.map((user) =>
+      workos.userManagement
+        .deleteUser(user.id)
+        .then(() => true)
+        .catch(() => false),
+    ),
+  );
+  return results.every(Boolean);
 }
 
 export const invites = new Hono<Env>()
@@ -70,21 +99,34 @@ export const invites = new Hono<Env>()
     return c.json({ email }, 201);
   })
 
-  // Deleting an invite fully removes the person: their WorkOS user (which
-  // revokes sessions) and their API tokens go with it.
+  // Deleting an invite fully removes the person: their API tokens, and their
+  // WorkOS user (which revokes live sessions).
+  //
+  // Tokens go first and go locally. This used to hang off a listUsers call
+  // wrapped in .catch(() => null), so one WorkOS hiccup skipped the whole
+  // block — user alive, tokens alive, sessions alive — and still answered 200
+  // with the invite row already gone, leaving nothing to retry against.
   .delete("/invites/:email", async (c) => {
     const email = c.req.param("email").toLowerCase();
     if (isAdminEmail(c.env, email)) return c.json({ error: "cannot remove an admin" }, 400);
+
     const db = drizzle(c.env.DB, { schema });
+    const row = await db.query.invites.findFirst({ where: eq(schema.invites.email, email) });
+    await purgeTokens(db, email, row?.workosUserId);
     await db.delete(schema.invites).where(eq(schema.invites.email, email));
 
-    if (workosConfigured(c.env)) {
-      const workos = getWorkos(c.env);
-      const users = await workos.userManagement.listUsers({ email }).catch(() => null);
-      for (const user of users?.data ?? []) {
-        await db.delete(schema.apiTokens).where(eq(schema.apiTokens.userId, user.id));
-        await workos.userManagement.deleteUser(user.id).catch(() => {});
-      }
+    // Tokens are gone either way; say so plainly rather than reporting a clean
+    // removal when their browser session may still be live.
+    if (await revokeWorkosUser(c.env, email)) {
+      return c.json({ deleted: email, sessionsRevoked: true });
     }
-    return c.json({ deleted: email });
+    return c.json(
+      {
+        deleted: email,
+        sessionsRevoked: false,
+        error:
+          "tokens revoked, but WorkOS could not be reached — their session may stay live until it expires",
+      },
+      502,
+    );
   });

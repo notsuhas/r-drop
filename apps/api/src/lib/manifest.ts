@@ -16,12 +16,34 @@ export async function listAll(bucket: R2Bucket, options: R2ListOptions) {
   return { objects, delimitedPrefixes };
 }
 
+/**
+ * camelCase asset name for a folder-relative filename, disambiguated when it
+ * collides with a name already in the manifest.
+ *
+ * "logo-dark.png", "logo_dark.svg" and "logoDark.jpg" all camelCase to
+ * "logoDark". They used to overwrite each other, so a folder of three real
+ * objects published a manifest of one and said count: 1 about it. The
+ * extension is the first tiebreak because it is what actually differs;
+ * a numeric suffix covers the rest.
+ */
+function manifestName(taken: Record<string, string>, filename: string) {
+  const dot = filename.lastIndexOf(".");
+  const [base, ext] = dot > 0 ? [filename.slice(0, dot), filename.slice(dot + 1)] : [filename, ""];
+  const plain = camelCase(base);
+  if (!(plain in taken)) return plain;
+  const qualified = camelCase(`${base}-${ext}`);
+  if (ext && !(qualified in taken)) return qualified;
+  let n = 2;
+  while (`${plain}${n}` in taken) n += 1;
+  return `${plain}${n}`;
+}
+
 export function buildManifest(publicBase: string, folder: string, objects: R2Object[]) {
   const assets: Record<string, string> = {};
   for (const o of objects) {
     if (o.key.endsWith("/")) continue;
     const name = o.key.slice(folder.length + 1);
-    assets[camelCase(name.replace(/\.[^.]+$/, ""))] = `${publicBase}/${o.key}`;
+    assets[manifestName(assets, name)] = `${publicBase}/${o.key}`;
   }
   return { folder, count: Object.keys(assets).length, assets };
 }

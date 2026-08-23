@@ -53,6 +53,14 @@ jobs:
       - name: build dashboard
         run: cd apps/dashboard && bun run build
 
+      # Before the deploy, not after: the worker that comes up next expects
+      # these columns, and migrations here are additive, so an old worker is
+      # unaffected by them landing early.
+      - name: apply d1 migrations
+        run: bunx wrangler d1 migrations apply r-drop-db --remote
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
       - name: deploy worker
         run: bunx wrangler deploy
         env:

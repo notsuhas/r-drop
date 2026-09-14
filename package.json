@@ -16,7 +16,7 @@
     "clean": "git clean -Xdf -e '!wrangler.jsonc' -e '!.dev.vars'"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.10",
-    "fallow": "^3.17.0"
+    "@biomejs/biome": "^2.5.13",
+    "fallow": "^3.24.1"
   }
 }
